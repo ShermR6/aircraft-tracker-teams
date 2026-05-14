@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import { Plus, X, Phone, Hash, Mail, UserPlus, Check, Clock, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, X, Phone, Hash, Mail, UserPlus, Check, Clock, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
+import APIService from '../services/api';
 
 const TABS = ['Members', 'Channels', 'Routing', 'Activity'];
+
+const DISTANCES = ['10nm', '5nm', '2nm', 'landing'];
+const DISTANCE_LABELS = { '10nm': '10nm', '5nm': '5nm', '2nm': '2nm', 'landing': 'Landing' };
 
 const ROLE_STYLES = {
   owner: { bg: 'rgba(14,165,233,0.12)', color: '#0ea5e9', label: 'Owner' },
@@ -15,8 +19,6 @@ const INTEGRATION_TYPES = [
   { key: 'slack', label: 'Slack Channels', Icon: Hash, placeholder: 'https://hooks.slack.com/services/...', hint: 'Slack incoming webhook URL' },
   { key: 'email', label: 'Email Addresses', Icon: Mail, placeholder: 'team@company.com', hint: 'Email address to receive alerts' },
 ];
-
-const DISTANCES = ['10nm', '5nm', '2nm', 'Landing'];
 
 const inputStyle = {
   width: '100%', padding: '10px 12px',
@@ -79,7 +81,7 @@ function FieldLabel({ children }) {
   );
 }
 
-function ModalActions({ onCancel, onConfirm, confirmLabel, disabled }) {
+function ModalActions({ onCancel, onConfirm, confirmLabel, disabled, loading }) {
   return (
     <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
       <button onClick={onCancel} style={{
@@ -89,21 +91,36 @@ function ModalActions({ onCancel, onConfirm, confirmLabel, disabled }) {
       }}>Cancel</button>
       <button
         onClick={onConfirm}
-        disabled={disabled}
+        disabled={disabled || loading}
         style={{
           flex: 1, padding: '11px', borderRadius: 8,
-          background: disabled ? 'rgba(14,165,233,0.2)' : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
-          border: 'none', color: disabled ? '#0ea5e9' : '#fff',
-          fontSize: 13, fontWeight: 700, cursor: disabled ? 'not-allowed' : 'pointer',
+          background: (disabled || loading) ? 'rgba(14,165,233,0.2)' : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+          border: 'none', color: (disabled || loading) ? '#0ea5e9' : '#fff',
+          fontSize: 13, fontWeight: 700, cursor: (disabled || loading) ? 'not-allowed' : 'pointer',
         }}
-      >{confirmLabel}</button>
+      >{loading ? 'Sending...' : confirmLabel}</button>
     </div>
   );
 }
 
 function InviteMemberModal({ onClose, onInvite }) {
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('member');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const handleConfirm = async () => {
+    if (!email.trim()) return;
+    setLoading(true);
+    setErr('');
+    try {
+      await onInvite(email.trim());
+      onClose();
+    } catch (e) {
+      setErr(e?.response?.data?.detail || 'Failed to send invite');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal title="Invite Team Member" onClose={onClose}>
@@ -112,42 +129,22 @@ function InviteMemberModal({ onClose, onInvite }) {
         <input
           value={email}
           onChange={e => setEmail(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleConfirm()}
           placeholder="teammate@company.com"
           style={inputStyle}
           autoFocus
         />
-      </div>
-      <div>
-        <FieldLabel>Role</FieldLabel>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {['member', 'admin'].map(r => {
-            const rs = ROLE_STYLES[r];
-            return (
-              <button
-                key={r}
-                onClick={() => setRole(r)}
-                style={{
-                  flex: 1, padding: '9px', borderRadius: 8,
-                  border: `1px solid ${role === r ? rs.color + '44' : 'rgba(255,255,255,0.08)'}`,
-                  background: role === r ? rs.bg : 'transparent',
-                  color: role === r ? rs.color : '#6b7280',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize',
-                }}
-              >{r}</button>
-            );
-          })}
-        </div>
         <p style={{ fontSize: 11, color: '#4b5563', margin: '6px 0 0', lineHeight: 1.5 }}>
-          {role === 'admin'
-            ? 'Can manage members, channels, and routing rules.'
-            : 'Receives alerts. Cannot change team settings.'}
+          They'll receive an email with the team license key and installation instructions.
         </p>
+        {err && <p style={{ fontSize: 12, color: '#f87171', margin: '8px 0 0' }}>{err}</p>}
       </div>
       <ModalActions
         onCancel={onClose}
-        onConfirm={() => { if (email.trim()) { onInvite(email.trim(), role); onClose(); } }}
+        onConfirm={handleConfirm}
         confirmLabel="Send Invite"
         disabled={!email.trim()}
+        loading={loading}
       />
     </Modal>
   );
@@ -156,7 +153,23 @@ function InviteMemberModal({ onClose, onInvite }) {
 function AddChannelModal({ type, onClose, onAdd }) {
   const [label, setLabel] = useState('');
   const [value, setValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
   const integ = INTEGRATION_TYPES.find(t => t.key === type);
+
+  const handleConfirm = async () => {
+    if (!label.trim() || !value.trim()) return;
+    setLoading(true);
+    setErr('');
+    try {
+      await onAdd(type, label.trim(), value.trim());
+      onClose();
+    } catch (e) {
+      setErr(e?.response?.data?.detail || 'Failed to add channel');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Modal title={`Add ${integ.label.slice(0, -1)}`} onClose={onClose}>
@@ -175,16 +188,19 @@ function AddChannelModal({ type, onClose, onAdd }) {
         <input
           value={value}
           onChange={e => setValue(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleConfirm()}
           placeholder={integ.placeholder}
           style={inputStyle}
         />
         <p style={{ fontSize: 11, color: '#4b5563', margin: '6px 0 0' }}>{integ.hint}</p>
+        {err && <p style={{ fontSize: 12, color: '#f87171', margin: '8px 0 0' }}>{err}</p>}
       </div>
       <ModalActions
         onCancel={onClose}
-        onConfirm={() => { if (label.trim() && value.trim()) { onAdd(type, { label: label.trim(), value: value.trim() }); onClose(); } }}
+        onConfirm={handleConfirm}
         confirmLabel="Add Channel"
         disabled={!label.trim() || !value.trim()}
+        loading={loading}
       />
     </Modal>
   );
@@ -216,7 +232,7 @@ function MembersTab({ members, onInvite, onRemove }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {members.map(m => {
-          const role = ROLE_STYLES[m.role];
+          const role = ROLE_STYLES[m.role] || ROLE_STYLES.member;
           return (
             <div key={m.id} style={{
               display: 'flex', alignItems: 'center', gap: 14,
@@ -226,10 +242,12 @@ function MembersTab({ members, onInvite, onRemove }) {
             }}>
               <Avatar email={m.email} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9', marginBottom: m.name ? 2 : 0 }}>
-                  {m.name || m.email}
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {m.email}
                 </div>
-                {m.name && <div style={{ fontSize: 12, color: '#4b5563' }}>{m.email}</div>}
+                <div style={{ fontSize: 11, color: '#374151', marginTop: 2 }}>
+                  Joined {new Date(m.joined_at).toLocaleDateString()}
+                </div>
               </div>
               <span style={{
                 fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
@@ -237,10 +255,9 @@ function MembersTab({ members, onInvite, onRemove }) {
               }}>{role.label}</span>
               <span style={{
                 display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0,
-                fontSize: 11, color: m.status === 'active' ? '#22d3a3' : '#f59e0b',
+                fontSize: 11, color: '#22d3a3',
               }}>
-                {m.status === 'active' ? <Check size={12} /> : <Clock size={12} />}
-                {m.status === 'active' ? 'Active' : 'Invited'}
+                <Check size={12} /> Active
               </span>
               {m.role !== 'owner' && (
                 <button
@@ -269,7 +286,9 @@ function ChannelsTab({ channels, onAddChannel, onRemoveChannel }) {
         <AddChannelModal
           type={addingType}
           onClose={() => setAddingType(null)}
-          onAdd={(type, ch) => { onAddChannel(type, ch); setAddingType(null); }}
+          onAdd={async (type, label, value) => {
+            await onAddChannel(type, label, value);
+          }}
         />
       )}
       <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>
@@ -277,7 +296,7 @@ function ChannelsTab({ channels, onAddChannel, onRemoveChannel }) {
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {INTEGRATION_TYPES.map(({ key, label, Icon }) => {
-          const list = channels[key] || [];
+          const list = channels.filter(ch => ch.integration_type === key);
           return (
             <div key={key}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -329,7 +348,7 @@ function ChannelsTab({ channels, onAddChannel, onRemoveChannel }) {
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
                       }}>{ch.value}</span>
                       <button
-                        onClick={() => onRemoveChannel(key, ch.id)}
+                        onClick={() => onRemoveChannel(ch.id)}
                         style={{ background: 'none', border: 'none', color: '#374151', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}
                         onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
                         onMouseLeave={e => e.currentTarget.style.color = '#374151'}
@@ -349,11 +368,7 @@ function ChannelsTab({ channels, onAddChannel, onRemoveChannel }) {
 }
 
 function RoutingTab({ channels, routing, onToggle }) {
-  const allChannels = INTEGRATION_TYPES.flatMap(({ key }) =>
-    (channels[key] || []).map(ch => ({ ...ch, type: key }))
-  );
-
-  if (allChannels.length === 0) {
+  if (channels.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div style={{ fontSize: 36, marginBottom: 12 }}>📡</div>
@@ -380,8 +395,8 @@ function RoutingTab({ channels, routing, onToggle }) {
               <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.08em', width: 110 }}>
                 Distance
               </th>
-              {allChannels.map(ch => (
-                <th key={`${ch.type}_${ch.id}`} style={{ padding: '10px 12px', textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#6b7280', whiteSpace: 'nowrap' }}>
+              {channels.map(ch => (
+                <th key={ch.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#6b7280', whiteSpace: 'nowrap' }}>
                   {ch.label}
                 </th>
               ))}
@@ -399,26 +414,25 @@ function RoutingTab({ channels, routing, onToggle }) {
                 <td style={{ padding: '13px 16px' }}>
                   <span style={{
                     fontSize: 13, fontWeight: 700,
-                    color: dist === 'Landing' ? '#22d3a3' : '#f1f5f9',
-                  }}>{dist}</span>
+                    color: dist === 'landing' ? '#22d3a3' : '#f1f5f9',
+                  }}>{DISTANCE_LABELS[dist]}</span>
                 </td>
-                {allChannels.map(ch => {
-                  const key = `${dist}_${ch.type}_${ch.id}`;
-                  const checked = routing[key] !== false;
+                {channels.map(ch => {
+                  const enabled = !(routing[dist] || []).includes(ch.id);
                   return (
-                    <td key={`${ch.type}_${ch.id}`} style={{ padding: '13px 12px', textAlign: 'center' }}>
+                    <td key={ch.id} style={{ padding: '13px 12px', textAlign: 'center' }}>
                       <button
-                        onClick={() => onToggle(key, !checked)}
+                        onClick={() => onToggle(dist, ch.id, enabled)}
                         style={{
                           width: 20, height: 20, borderRadius: 5,
-                          border: `1.5px solid ${checked ? '#0ea5e9' : 'rgba(255,255,255,0.15)'}`,
-                          background: checked ? '#0ea5e9' : 'transparent',
+                          border: `1.5px solid ${enabled ? '#0ea5e9' : 'rgba(255,255,255,0.15)'}`,
+                          background: enabled ? '#0ea5e9' : 'transparent',
                           cursor: 'pointer',
                           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                           transition: 'all 0.15s',
                         }}
                       >
-                        {checked && <Check size={11} color="#fff" strokeWidth={3} />}
+                        {enabled && <Check size={11} color="#fff" strokeWidth={3} />}
                       </button>
                     </td>
                   );
@@ -432,46 +446,175 @@ function RoutingTab({ channels, routing, onToggle }) {
   );
 }
 
-function ActivityTab() {
-  return (
-    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-      <div style={{ fontSize: 36, marginBottom: 12 }}>📋</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#6b7280', marginBottom: 4 }}>No activity yet</div>
-      <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
-        Alert events and acknowledgments will appear here once your team starts receiving alerts.
+function ActivityTab({ activity, loading }) {
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px 20px', color: '#4b5563', fontSize: 13 }}>
+        Loading activity...
       </div>
+    );
+  }
+
+  if (activity.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>📋</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#6b7280', marginBottom: 4 }}>No activity yet</div>
+        <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
+          Alert events will appear here once your team starts receiving alerts.
+        </div>
+      </div>
+    );
+  }
+
+  const TYPE_COLORS = {
+    '10nm': '#0ea5e9', '5nm': '#a855f7', '2nm': '#f59e0b', 'landing': '#22d3a3',
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {activity.map(a => (
+        <div key={a.id} style={{
+          display: 'flex', alignItems: 'flex-start', gap: 14,
+          padding: '12px 16px',
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10,
+        }}>
+          <span style={{
+            fontSize: 10, fontWeight: 700, padding: '3px 7px', borderRadius: 5, flexShrink: 0,
+            background: 'rgba(14,165,233,0.1)',
+            color: TYPE_COLORS[a.alert_type] || '#6b7280',
+            marginTop: 1,
+          }}>{a.alert_type}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, color: '#d1d5db', marginBottom: 2 }}>{a.message}</div>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <span style={{ fontSize: 11, color: '#4b5563' }}>{a.aircraft_tail}</span>
+              <span style={{ fontSize: 11, color: '#374151' }}>via {a.integration_type}</span>
+              <span style={{ fontSize: 11, color: '#374151' }}>{new Date(a.sent_at).toLocaleString()}</span>
+            </div>
+          </div>
+          <span style={{
+            fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4, flexShrink: 0,
+            background: a.status === 'sent' ? 'rgba(34,211,163,0.1)' : 'rgba(248,113,113,0.1)',
+            color: a.status === 'sent' ? '#22d3a3' : '#f87171',
+          }}>{a.status}</span>
+        </div>
+      ))}
     </div>
   );
 }
 
 export default function Teams() {
   const [activeTab, setActiveTab] = useState('Members');
-  const [members, setMembers] = useState([
-    { id: 1, email: 'you@example.com', role: 'owner', status: 'active' },
-  ]);
-  const [channels, setChannels] = useState({ sms: [], discord: [], slack: [], email: [] });
-  const [routing, setRouting] = useState({});
-  const nextId = React.useRef(10);
+  const [team, setTeam] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activity, setActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityLoaded, setActivityLoaded] = useState(false);
 
-  const handleInvite = (email, role) => {
-    setMembers(prev => [...prev, { id: nextId.current++, email, role, status: 'invited' }]);
+  const loadTeam = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await APIService.getTeam();
+      setTeam(data);
+    } catch (e) {
+      setError(e?.response?.data?.detail || 'Failed to load team data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRemoveMember = (id) => {
-    setMembers(prev => prev.filter(m => m.id !== id));
+  const loadActivity = async () => {
+    setActivityLoading(true);
+    try {
+      const data = await APIService.getTeamActivity();
+      setActivity(data);
+      setActivityLoaded(true);
+    } catch {}
+    setActivityLoading(false);
   };
 
-  const handleAddChannel = (type, ch) => {
-    setChannels(prev => ({ ...prev, [type]: [...prev[type], { ...ch, id: nextId.current++ }] }));
+  useEffect(() => { loadTeam(); }, []);
+
+  useEffect(() => {
+    if (activeTab === 'Activity' && !activityLoaded && !activityLoading) {
+      loadActivity();
+    }
+  }, [activeTab]);
+
+  const handleInvite = async (email) => {
+    await APIService.inviteTeamMember(email);
   };
 
-  const handleRemoveChannel = (type, id) => {
-    setChannels(prev => ({ ...prev, [type]: prev[type].filter(c => c.id !== id) }));
+  const handleRemoveMember = async (memberId) => {
+    const prev = team;
+    setTeam(t => ({ ...t, members: t.members.filter(m => m.id !== memberId) }));
+    try {
+      await APIService.removeTeamMember(memberId);
+    } catch {
+      setTeam(prev);
+    }
   };
 
-  const handleToggleRouting = (key, val) => {
-    setRouting(prev => ({ ...prev, [key]: val }));
+  const handleAddChannel = async (type, label, value) => {
+    const newChannel = await APIService.addTeamChannel(type, label, value);
+    setTeam(t => ({ ...t, channels: [...t.channels, newChannel] }));
   };
+
+  const handleRemoveChannel = async (channelId) => {
+    const prev = team;
+    setTeam(t => ({ ...t, channels: t.channels.filter(c => c.id !== channelId) }));
+    try {
+      await APIService.removeTeamChannel(channelId);
+    } catch {
+      setTeam(prev);
+    }
+  };
+
+  const handleToggleRouting = async (dist, channelId, currentlyEnabled) => {
+    const prevRouting = team.routing;
+    const disabled = [...(team.routing[dist] || [])];
+    const newDisabled = currentlyEnabled
+      ? [...disabled, channelId]
+      : disabled.filter(id => id !== channelId);
+    const newRouting = { ...team.routing, [dist]: newDisabled };
+    setTeam(t => ({ ...t, routing: newRouting }));
+    try {
+      await APIService.updateTeamRouting(newRouting);
+    } catch {
+      setTeam(t => ({ ...t, routing: prevRouting }));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 240 }}>
+        <div style={{ color: '#4b5563', fontSize: 13 }}>Loading team...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 240, gap: 12 }}>
+        <AlertCircle size={24} color="#f87171" />
+        <div style={{ color: '#f87171', fontSize: 13 }}>{error}</div>
+        <button
+          onClick={loadTeam}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af', fontSize: 13, cursor: 'pointer' }}
+        >
+          <RefreshCw size={13} /> Retry
+        </button>
+      </div>
+    );
+  }
+
+  const members = team?.members || [];
+  const channels = team?.channels || [];
+  const routing = team?.routing || {};
 
   return (
     <div style={{ maxWidth: 760 }}>
@@ -517,7 +660,9 @@ export default function Teams() {
       {activeTab === 'Routing' && (
         <RoutingTab channels={channels} routing={routing} onToggle={handleToggleRouting} />
       )}
-      {activeTab === 'Activity' && <ActivityTab />}
+      {activeTab === 'Activity' && (
+        <ActivityTab activity={activity} loading={activityLoading} />
+      )}
     </div>
   );
 }

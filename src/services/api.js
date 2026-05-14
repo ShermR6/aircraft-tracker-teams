@@ -265,6 +265,44 @@ class APIService {
     const response = await this.client.get('/api/notifications/stats');
     return response.data;
   }
+
+  // Team Management
+  async getTeam() {
+    const response = await this.client.get('/api/teams/me');
+    return response.data;
+  }
+
+  async addTeamChannel(integrationType, label, value) {
+    const response = await this.client.post('/api/teams/channels', {
+      integration_type: integrationType,
+      label,
+      value,
+    });
+    return response.data;
+  }
+
+  async removeTeamChannel(channelId) {
+    await this.client.delete(`/api/teams/channels/${channelId}`);
+  }
+
+  async updateTeamRouting(routing) {
+    const response = await this.client.put('/api/teams/routing', { routing });
+    return response.data;
+  }
+
+  async inviteTeamMember(email) {
+    const response = await this.client.post('/api/teams/invite', { email });
+    return response.data;
+  }
+
+  async removeTeamMember(memberId) {
+    await this.client.delete(`/api/teams/members/${memberId}`);
+  }
+
+  async getTeamActivity() {
+    const response = await this.client.get('/api/teams/activity');
+    return response.data;
+  }
 }
 
 export default new APIService();
