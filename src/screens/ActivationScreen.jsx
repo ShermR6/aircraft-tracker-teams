@@ -351,6 +351,10 @@ export default function ActivationScreen({ onSuccess }) {
       setError('You must agree to the Terms of Service and Privacy Policy to continue.');
       return;
     }
+    if (!licenseKey.trim().toUpperCase().startsWith('FPT-')) {
+      setError('FinalPing for Teams requires a Teams license key starting with FPT-. Personal license keys are not accepted here.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -394,53 +398,53 @@ export default function ActivationScreen({ onSuccess }) {
 
         <div style={s.logoRow}>
           <div>
-            <div style={{ fontSize: '9px', fontWeight: '700', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#6b7280', lineHeight: 1, marginBottom: '2px' }}>Aircraft Alerts</div>
-            <div style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.02em', color: '#f9fafb', lineHeight: 1.1 }}>FinalPing</div>
+            <div style={{ fontSize: '9px', fontWeight: '700', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#6b7280', lineHeight: 1, marginBottom: '2px' }}>Team Management</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.02em', color: '#f9fafb', lineHeight: 1.1 }}>FinalPing for Teams</div>
             <div style={{ width: '40px', height: '2px', background: 'linear-gradient(90deg, #0ea5e9, transparent)', borderRadius: '999px', marginTop: '4px' }} />
           </div>
         </div>
 
         <h1 style={s.heroTitle}>
-          Track flights.<br />
-          <span style={s.heroAccent}>Get notified instantly.</span>
+          Alert your whole team.<br />
+          <span style={s.heroAccent}>The moment it matters.</span>
         </h1>
         <p style={s.heroSub}>
-          Real-time ADS-B monitoring for the aircraft you care about, delivered to Discord, Slack, and Teams.
+          Real-time ADS-B alerts for teams. Route notifications to multiple SMS numbers, Discord channels, and Slack workspaces — all from one app.
         </p>
 
         <div style={s.featureList}>
           <div style={s.featureItem}>
             <div style={s.featureIcon('#3b82f6')}><Plane size={16} color="#60a5fa" /></div>
             <div>
-              <p style={s.featureTitle}>Real-Time Tracking</p>
-              <p style={s.featureSub}>Live ADS-B position data updated every few seconds for your tracked aircraft.</p>
+              <p style={s.featureTitle}>Multi-Recipient Alerts</p>
+              <p style={s.featureSub}>Blast alerts to your entire ramp team via SMS, Discord, Slack, or email simultaneously.</p>
             </div>
           </div>
           <div style={s.featureItem}>
             <div style={s.featureIcon('#34d399')}><Bell size={16} color="#34d399" /></div>
             <div>
-              <p style={s.featureTitle}>Smart Alerts</p>
-              <p style={s.featureSub}>Proximity alerts at custom distances — 20nm, 10nm, 5nm, or whatever you need.</p>
+              <p style={s.featureTitle}>Smart Routing</p>
+              <p style={s.featureSub}>Configure which channels fire at 10nm, 5nm, 2nm, and landing — independently per distance.</p>
             </div>
           </div>
           <div style={s.featureItem}>
             <div style={s.featureIcon('#a78bfa')}><Zap size={16} color="#a78bfa" /></div>
             <div>
-              <p style={s.featureTitle}>Multi-Channel Notifications</p>
-              <p style={s.featureSub}>Push alerts to Discord, Slack, or Microsoft Teams with custom messages.</p>
+              <p style={s.featureTitle}>Team Member Management</p>
+              <p style={s.featureSub}>Invite teammates by email, assign roles, and manage who receives what — all in-app.</p>
             </div>
           </div>
           <div style={s.featureItem}>
             <div style={s.featureIcon('#f59e0b')}><Shield size={16} color="#fbbf24" /></div>
             <div>
-              <p style={s.featureTitle}>Quiet Hours</p>
-              <p style={s.featureSub}>Set hours where no notifications are sent — so you can actually sleep.</p>
+              <p style={s.featureTitle}>Activity Log</p>
+              <p style={s.featureSub}>See every alert that fired, who was notified, and who acknowledged — full team visibility.</p>
             </div>
           </div>
         </div>
 
         <div style={s.leftFooter}>
-          <p style={s.leftFooterText}>v1.0.6 · © 2026 FinalPing · <a href="https://finalpingapp.com/pricing" onClick={e => { e.preventDefault(); window.electronAPI?.openExternal('https://finalpingapp.com'); }} style={{ color: '#4b5563', textDecoration: 'none' }}>FinalPingApp.com</a></p>
+          <p style={s.leftFooterText}>v1.0.0 · © 2026 FinalPing · <a href="https://finalpingapp.com" onClick={e => { e.preventDefault(); window.electronAPI?.openExternal('https://finalpingapp.com'); }} style={{ color: '#4b5563', textDecoration: 'none' }}>FinalPingApp.com</a></p>
         </div>
       </div>
 
@@ -541,7 +545,7 @@ export default function ActivationScreen({ onSuccess }) {
                   <label style={s.label}>License Key</label>
                   <div style={s.inputWrap}>
                     <div style={s.inputIcon}><Key size={15} color="#4b5563" /></div>
-                    <input style={s.input} type="text" placeholder="XXXX-XXXX-XXXX-XXXX"
+                    <input style={s.input} type="text" placeholder="FPT-XXXX-XXXX-XXXX-XXXX"
                       value={licenseKey} onChange={e => setLicenseKey(e.target.value)}
                       onFocus={focusInput} onBlur={blurInput} autoComplete="off" spellCheck={false} />
                   </div>
@@ -579,17 +583,17 @@ export default function ActivationScreen({ onSuccess }) {
               </div>
 
               <div style={s.purchaseBox}>
-                <p style={s.purchaseText}>Get a license key to start tracking your aircraft</p>
-                <a href="https://finalpingapp.com/pricing"
-                  onClick={e => { e.preventDefault(); openLink('https://finalpingapp.com/pricing'); }}
+                <p style={s.purchaseText}>Need a Teams license? Contact us to get set up</p>
+                <a href="https://finalpingapp.com/contact"
+                  onClick={e => { e.preventDefault(); openLink('https://finalpingapp.com/contact'); }}
                   style={s.purchaseBtn}
                   onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(135deg, #a78bfa30, #6366f130)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(135deg, #a78bfa20, #6366f120)'}>
-                  <Zap size={13} /> Purchase at FinalPingApp.com
+                  <Zap size={13} /> Contact FinalPingApp.com
                 </a>
               </div>
 
-              <p style={s.formFooter}>Your license key was emailed to you after purchase.</p>
+              <p style={s.formFooter}>Your Teams license key (FPT-...) was sent to you after purchase.</p>
             </>
           )}
 
