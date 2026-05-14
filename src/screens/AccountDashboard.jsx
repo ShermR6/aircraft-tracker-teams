@@ -34,6 +34,11 @@ const s = {
   emptyLog: { textAlign: 'center', padding: '24px', color: '#4b5563', fontSize: '13px' },
 };
 
+function formatTier(tier) {
+  if (!tier) return '—';
+  return tier.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 function timeAgo(isoString) {
   const diff = Date.now() - new Date(isoString).getTime();
   const mins = Math.floor(diff / 60000);
@@ -183,11 +188,11 @@ export default function AccountDashboard() {
         <div style={s.cardAccent(color)}>
           <div style={s.cardTop}>
             <div style={s.iconBox(color)}><Shield size={20} color={color} /></div>
-            <span style={s.badge(color)}>{user?.license_tier ? user.license_tier.charAt(0).toUpperCase() + user.license_tier.slice(1) : 'Unknown'}</span>
+            <span style={s.badge(color)}>{user?.license_tier ? formatTier(user.license_tier) : 'Unknown'}</span>
           </div>
           <p style={s.cardLabel}>License Tier</p>
           <p style={{ ...s.cardValue, color }}>
-            {user?.license_tier ? user.license_tier.charAt(0).toUpperCase() + user.license_tier.slice(1) : '—'}
+            {user?.license_tier ? formatTier(user.license_tier) : '—'}
           </p>
         </div>
 
@@ -243,7 +248,7 @@ export default function AccountDashboard() {
           </div>
           <div style={s.row}>
             <span style={s.rowLabel}>License</span>
-            <span style={{ ...s.rowValue, color }}>{user?.license_tier ? user.license_tier.charAt(0).toUpperCase() + user.license_tier.slice(1) : '—'}</span>
+            <span style={{ ...s.rowValue, color }}>{user?.license_tier ? formatTier(user.license_tier) : '—'}</span>
           </div>
           <div style={s.rowLast}>
             <span style={s.rowLabel}><Clock size={13} />Expires</span>

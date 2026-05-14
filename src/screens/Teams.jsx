@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, X, Phone, Hash, Mail, UserPlus, Check, Clock, Trash2, AlertCircle, RefreshCw } from 'lucide-react';
 import APIService from '../services/api';
 
-const TABS = ['Members', 'Channels', 'Routing', 'Activity'];
+const TABS = ['Members', 'Routing'];
 
 const DISTANCES = ['10nm', '5nm', '2nm', 'landing'];
 const DISTANCE_LABELS = { '10nm': '10nm', '5nm': '5nm', '2nm': '2nm', 'landing': 'Landing' };
@@ -510,10 +510,6 @@ export default function Teams() {
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activity, setActivity] = useState([]);
-  const [activityLoading, setActivityLoading] = useState(false);
-  const [activityLoaded, setActivityLoaded] = useState(false);
-
   const loadTeam = async () => {
     setLoading(true);
     setError(null);
@@ -527,23 +523,7 @@ export default function Teams() {
     }
   };
 
-  const loadActivity = async () => {
-    setActivityLoading(true);
-    try {
-      const data = await APIService.getTeamActivity();
-      setActivity(data);
-      setActivityLoaded(true);
-    } catch {}
-    setActivityLoading(false);
-  };
-
   useEffect(() => { loadTeam(); }, []);
-
-  useEffect(() => {
-    if (activeTab === 'Activity' && !activityLoaded && !activityLoading) {
-      loadActivity();
-    }
-  }, [activeTab]);
 
   const handleInvite = async (email) => {
     await APIService.inviteTeamMember(email);
@@ -654,14 +634,8 @@ export default function Teams() {
       {activeTab === 'Members' && (
         <MembersTab members={members} onInvite={handleInvite} onRemove={handleRemoveMember} />
       )}
-      {activeTab === 'Channels' && (
-        <ChannelsTab channels={channels} onAddChannel={handleAddChannel} onRemoveChannel={handleRemoveChannel} />
-      )}
       {activeTab === 'Routing' && (
         <RoutingTab channels={channels} routing={routing} onToggle={handleToggleRouting} />
-      )}
-      {activeTab === 'Activity' && (
-        <ActivityTab activity={activity} loading={activityLoading} />
       )}
     </div>
   );

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Plane, LogOut, Bell, MapPin, LayoutDashboard, Map, ScrollText, CheckCircle, Circle, ArrowRight, X, MessageSquare, BookOpen, Users } from 'lucide-react';
+import { Plane, Link as LinkIcon, LogOut, Bell, MapPin, LayoutDashboard, Map, ScrollText, CheckCircle, Circle, ArrowRight, X, MessageSquare, BookOpen, Users } from 'lucide-react';
 import StorageService from '../services/storage';
 import APIService from '../services/api';
 import AirportConfig from './AirportConfig';
 import AlertSettings from './AlertSettings';
+import Integrations from './Integrations';
 import AccountDashboard from './AccountDashboard';
 import AircraftManager from './AircraftManager';
 import TrackerStatus from './TrackerStatus';
@@ -34,8 +35,8 @@ const ONBOARDING_STEPS = [
     icon: '🔔',
     title: 'Add a notification channel',
     desc: 'Add Discord, Slack, SMS, or email channels to your team so alerts reach everyone instantly.',
-    action: 'Go to Team',
-    route: '/dashboard/team',
+    action: 'Go to Integrations',
+    route: '/dashboard/integrations',
   },
 ];
 
@@ -490,6 +491,7 @@ export default function Dashboard({ onLogout }) {
           <NavItem to="/dashboard/map" icon={Map} label="Live Map" active={path === '/dashboard/map'} />
           <NavItem to="/dashboard/airport" icon={MapPin} label="Airport Config" active={path === '/dashboard/airport'} />
           <NavItem to="/dashboard/alerts" icon={Bell} label="Alerts" active={path === '/dashboard/alerts'} />
+          <NavItem to="/dashboard/integrations" icon={LinkIcon} label="Integrations" active={path === '/dashboard/integrations'} />
           <NavItem to="/dashboard/team" icon={Users} label="Team" active={path === '/dashboard/team'} />
           <NavItem to="/dashboard/logs" icon={ScrollText} label="Logs" active={path === '/dashboard/logs'} />
         </nav>
@@ -562,6 +564,7 @@ export default function Dashboard({ onLogout }) {
           <Route path="/" element={<div style={s.content}><DashboardHome isViewOnly={isViewOnly} /></div>} />
           <Route path="/aircraft" element={<div style={s.content}><AircraftManager isViewOnly={isViewOnly} /></div>} />
           <Route path="/alerts" element={<div style={s.content}><AlertSettings isViewOnly={isViewOnly} /></div>} />
+          <Route path="/integrations" element={<div style={s.content}><Integrations /></div>} />
           <Route path="/team" element={<div style={s.content}><Teams /></div>} />
           <Route path="/logs" element={<div style={s.content}><Logs /></div>} />
         </Routes>
