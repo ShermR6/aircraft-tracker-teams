@@ -153,14 +153,14 @@ class APIService {
     return response.data;
   }
 
-  // Aircraft Management
+  // Aircraft Management (team-scoped — isolated from personal app data)
   async getAircraft() {
-    const response = await this.client.get('/api/aircraft');
+    const response = await this.client.get('/api/teams/aircraft');
     return response.data;
   }
 
   async addAircraft(tailNumber, icao24, friendlyName = null, aircraftType = null, alertDistances = null) {
-    const response = await this.client.post('/api/aircraft', {
+    const response = await this.client.post('/api/teams/aircraft', {
       tail_number: tailNumber,
       icao24: icao24,
       friendly_name: friendlyName,
@@ -171,7 +171,7 @@ class APIService {
   }
 
   async updateAircraft(aircraftId, tailNumber, icao24, friendlyName = null, aircraftType = null, alertDistances = null) {
-    const response = await this.client.put(`/api/aircraft/${aircraftId}`, {
+    const response = await this.client.put(`/api/teams/aircraft/${aircraftId}`, {
       tail_number: tailNumber,
       icao24: icao24,
       friendly_name: friendlyName,
@@ -182,34 +182,34 @@ class APIService {
   }
 
   async deleteAircraft(aircraftId) {
-    const response = await this.client.delete(`/api/aircraft/${aircraftId}`);
+    const response = await this.client.delete(`/api/teams/aircraft/${aircraftId}`);
     return response.data;
   }
 
   async getLiveAircraft() {
-    const response = await this.client.get('/api/aircraft/live');
+    const response = await this.client.get('/api/teams/aircraft/live');
     return response.data;
   }
 
-  // Airport Configuration
+  // Airport Configuration (team-scoped)
   async getAirportConfig() {
-    const response = await this.client.get('/api/airport/config');
+    const response = await this.client.get('/api/teams/airport/config');
     return response.data;
   }
 
   async updateAirportConfig(config) {
-    const response = await this.client.post('/api/airport/config', config);
+    const response = await this.client.post('/api/teams/airport/config', config);
     return response.data;
   }
 
-  // Alert Settings
+  // Alert Settings (team-scoped)
   async getAlertSettings() {
-    const response = await this.client.get('/api/settings/alerts');
+    const response = await this.client.get('/api/teams/alert-settings');
     return response.data;
   }
 
   async updateAlertSetting(alertType, enabled, messageTemplate) {
-    const response = await this.client.post('/api/settings/alerts', {
+    const response = await this.client.post('/api/teams/alert-settings', {
       alert_type: alertType,
       enabled: enabled,
       message_template: messageTemplate
@@ -217,38 +217,12 @@ class APIService {
     return response.data;
   }
 
-  // Integrations
-  async getIntegrations() {
-    const response = await this.client.get('/api/integrations');
-    return response.data;
-  }
-
-  async createIntegration(type, config, enabled = true) {
-    const response = await this.client.post('/api/integrations', {
-      type: type,
-      config: config,
-      enabled: enabled
-    });
-    return response.data;
-  }
-
-  async updateIntegration(integrationId, config, enabled) {
-    const response = await this.client.put(`/api/integrations/${integrationId}`, {
-      config: config,
-      enabled: enabled
-    });
-    return response.data;
-  }
-
-  async deleteIntegration(integrationId) {
-    const response = await this.client.delete(`/api/integrations/${integrationId}`);
-    return response.data;
-  }
-
-  async testIntegration(integrationId) {
-    const response = await this.client.post(`/api/integrations/${integrationId}/test`);
-    return response.data;
-  }
+  // Integrations — not used in Teams app (channels managed via Teams tab)
+  async getIntegrations() { return []; }
+  async createIntegration() { return null; }
+  async updateIntegration() { return null; }
+  async deleteIntegration() { return null; }
+  async testIntegration() { return null; }
 
   // Health Check
   async healthCheck() {

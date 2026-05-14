@@ -47,13 +47,13 @@ function apiGet(endpoint, token) {
   });
 }
 
-// ─── Config assembly ─────────────────────────────────────────────────────────
+// ─── Config assembly (uses team-scoped endpoints) ────────────────────────────
 async function buildTrackerConfig(token) {
-  const [aircraftList, airportConfig, alertSettings, integrations] = await Promise.all([
-    apiGet('/api/aircraft', token),
-    apiGet('/api/airport/config', token),
-    apiGet('/api/settings/alerts', token),
-    apiGet('/api/integrations', token),
+  const [aircraftList, airportConfig, alertSettings, teamData] = await Promise.all([
+    apiGet('/api/teams/aircraft', token),
+    apiGet('/api/teams/airport/config', token),
+    apiGet('/api/teams/alert-settings', token),
+    apiGet('/api/teams/me', token),
   ]);
 
   // Aircraft
@@ -69,15 +69,15 @@ async function buildTrackerConfig(token) {
 
   // Airport / airspace
   const ap = airportConfig || {};
-  const fieldElevation = ap.field_elevation_ft_msl || 0;
+  const fieldElevation = ap.elevation_ft_msl || 0;
   const detectionRadius = ap.detection_radius_nm || 100;
   const ceilingAgl = ap.ceiling_ft_agl || 3000;
 
-  // Integrations — pull first enabled Discord webhook
-  // Also supports Slack / Teams via webhook_url
-  const discordInt = (integrations || []).find(i => i.type === 'discord' && i.enabled);
-  const slackInt   = (integrations || []).find(i => i.type === 'slack'   && i.enabled);
-  const teamsInt   = (integrations || []).find(i => i.type === 'teams'   && i.enabled);
+  // Team channels — use instead of personal integrations
+  const channels = (teamData && teamData.channels) ? teamData.channels : [];
+  const discordCh = channels.find(c => c.integration_type === 'discord' && c.enabled);
+  const slackCh   = channels.find(c => c.integration_type === 'slack'   && c.enabled);
+  const teamsCh   = channels.find(c => c.integration_type === 'teams'   && c.enabled);
 
   // Quiet hours
   const quietStart = ap.quiet_hours_start || '23:00';
@@ -96,10 +96,10 @@ async function buildTrackerConfig(token) {
     },
 
     airspace: {
-      name: ap.airport_code ? `${ap.airport_code} Airspace` : 'My Airport',
+      name: ap.airport_code ? `${ap.airport_code} Airspace` : 'Team Airport',
       center_lat: parseFloat(ap.latitude) || 0,
       center_lon: parseFloat(ap.longitude) || 0,
-      radius_nm: ap.detection_radius_nm || 5,
+      radius_nm: parseFloat(ap.radius_nm) || 5,
       field_elevation_ft_msl: fieldElevation,
       floor_ft_agl: 0,
       ceiling_ft_agl: ceilingAgl,
@@ -111,20 +111,18 @@ async function buildTrackerConfig(token) {
 
     // Discord bot section — kept for backwards compat with the Python tracker
     discord_bot: {
-      bot_token: discordInt?.config?.bot_token || '',
-      channel_id: discordInt?.config?.channel_id || '',
-      webhook_url: discordInt?.config?.webhook_url || '',
+      webhook_url: discordCh ? discordCh.value : '',
     },
 
-    // Additional webhook integrations
+    // Webhook integrations — sourced from team channels
     integrations: {
-      discord:  discordInt  ? { enabled: true, webhook_url: discordInt.config.webhook_url  || '' } : { enabled: false },
-      slack:    slackInt    ? { enabled: true, webhook_url: slackInt.config.webhook_url    || '' } : { enabled: false },
-      teams:    teamsInt    ? { enabled: true, webhook_url: teamsInt.config.webhook_url    || '' } : { enabled: false },
+      discord: discordCh ? { enabled: true, webhook_url: discordCh.value } : { enabled: false },
+      slack:   slackCh   ? { enabled: true, webhook_url: slackCh.value   } : { enabled: false },
+      teams:   teamsCh   ? { enabled: true, webhook_url: teamsCh.value   } : { enabled: false },
     },
 
     monitoring: {
-      poll_interval_seconds: ap.polling_interval_seconds || 10,
+      poll_interval_seconds: 10,
     },
 
     notifications: {
