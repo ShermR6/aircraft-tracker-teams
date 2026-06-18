@@ -1208,13 +1208,21 @@ export default function Teams({ userData }) {
     </div>
   );
 
-  if (error) return (
-    <div style={{ background: BG, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-      <AlertTriangle size={32} color='#ef4444' />
-      <div style={{ color: '#ef4444', fontSize: 14 }}>{error}</div>
-      <button onClick={loadAll} style={s.btn('ghost')}>Retry</button>
-    </div>
-  );
+  if (error) {
+    const isLicenseErr = error === 'team_license_expired' || error === 'Not a member of any team';
+    const msg = error === 'team_license_expired'
+      ? 'Your team license has expired. Re-activate your license key to renew.'
+      : error === 'Not a member of any team'
+      ? 'You are not part of a team yet. Activate a team license key or accept an invite.'
+      : error;
+    return (
+      <div style={{ background: BG, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+        <AlertTriangle size={32} color={isLicenseErr ? '#f59e0b' : '#ef4444'} />
+        <div style={{ color: isLicenseErr ? '#f59e0b' : '#ef4444', fontSize: 14, maxWidth: 320, textAlign: 'center' }}>{msg}</div>
+        <button onClick={loadAll} style={s.btn('ghost')}>Retry</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: BG, minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
