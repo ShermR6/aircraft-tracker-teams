@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, Phone, Hash, Mail, Trash2, AlertCircle, RefreshCw, Link as LinkIcon } from 'lucide-react';
+import { Plus, X, Phone, Hash, Mail, Trash2, AlertCircle, RefreshCw, Link as LinkIcon, MessageSquare, Globe } from 'lucide-react';
 import APIService from '../services/api';
 
 const INTEGRATION_TYPES = [
-  { key: 'sms',     label: 'SMS Numbers',       Icon: Phone, placeholder: '+1 (555) 000-0000',                      hint: 'Mobile number to receive text alerts' },
-  { key: 'discord', label: 'Discord Webhooks',  Icon: Hash,  placeholder: 'https://discord.com/api/webhooks/...', hint: 'Discord channel webhook URL' },
-  { key: 'slack',   label: 'Slack Channels',    Icon: Hash,  placeholder: 'https://hooks.slack.com/services/...', hint: 'Slack incoming webhook URL' },
-  { key: 'email',   label: 'Email Addresses',   Icon: Mail,  placeholder: 'team@company.com',                     hint: 'Email address to receive alerts' },
+  { key: 'discord',     label: 'Discord Webhooks',        Icon: Hash,         placeholder: 'https://discord.com/api/webhooks/...',      hint: 'Discord channel webhook URL' },
+  { key: 'slack',       label: 'Slack Channels',          Icon: Hash,         placeholder: 'https://hooks.slack.com/services/...',      hint: 'Slack incoming webhook URL' },
+  { key: 'teams',       label: 'Microsoft Teams',         Icon: MessageSquare,placeholder: 'https://outlook.office.com/webhook/...',    hint: 'Teams channel incoming webhook URL' },
+  { key: 'google_chat', label: 'Google Chat',             Icon: MessageSquare,placeholder: 'https://chat.googleapis.com/v1/spaces/...', hint: 'Google Chat space webhook URL' },
+  { key: 'email',       label: 'Email Addresses',         Icon: Mail,         placeholder: 'team@company.com',                          hint: 'Email address to receive alerts' },
+  { key: 'sms',         label: 'SMS Numbers',             Icon: Phone,        placeholder: '+11234567890',                              hint: 'Mobile number with country code (e.g. +11234567890)' },
+  { key: 'telegram',    label: 'Telegram',                Icon: MessageSquare,placeholder: 'BOT_TOKEN:CHAT_ID',                         hint: 'Format: bot_token:chat_id — create bot via @BotFather' },
+  { key: 'webhook',     label: 'Generic Webhooks',        Icon: Globe,        placeholder: 'https://your-service.com/webhook',          hint: 'FinalPing will POST JSON to this URL' },
 ];
 
 const inputStyle = {
   width: '100%', padding: '10px 12px',
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: '#232d42',
+  border: '1px solid #3a4562',
   borderRadius: 8, color: '#f9fafb', fontSize: 13,
   outline: 'none', boxSizing: 'border-box',
 };
@@ -87,7 +91,7 @@ function AddChannelModal({ type, onClose, onAdd }) {
           placeholder={integ.placeholder}
           style={inputStyle}
         />
-        <p style={{ fontSize: 11, color: '#4b5563', margin: '6px 0 0' }}>{integ.hint}</p>
+        <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>{integ.hint}</p>
         {err && <p style={{ fontSize: 12, color: '#f87171', margin: '8px 0 0' }}>{err}</p>}
       </div>
       <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
@@ -191,17 +195,17 @@ export default function Integrations() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {INTEGRATION_TYPES.map(({ key, label, Icon }) => {
           const list = channels.filter(ch => ch.integration_type === key);
           return (
-            <div key={key} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 22px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: list.length > 0 ? 16 : 0 }}>
+            <div key={key} style={{ background: '#1a2236', border: '1px solid #2a3452', borderRadius: 14, padding: '18px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: list.length > 0 ? 14 : 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Icon size={15} color="#4b5563" />
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#9ca3af' }}>{label}</span>
+                  <Icon size={15} color="#6b7280" />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#c4cad6' }}>{label}</span>
                   {list.length > 0 && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 999, background: 'rgba(14,165,233,0.12)', color: '#0ea5e9' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: 'rgba(14,165,233,0.18)', color: '#38bdf8' }}>
                       {list.length}
                     </span>
                   )}
@@ -210,39 +214,39 @@ export default function Integrations() {
                   onClick={() => setAddingType(key)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '7px 14px', borderRadius: 8,
-                    background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#6b7280', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    padding: '6px 13px', borderRadius: 8,
+                    background: '#232d42', border: '1px solid #3a4562',
+                    color: '#9ca3af', fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(14,165,233,0.4)'; e.currentTarget.style.color = '#0ea5e9'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#6b7280'; }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.color = '#38bdf8'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#3a4562'; e.currentTarget.style.color = '#9ca3af'; }}
                 >
                   <Plus size={13} /> Add
                 </button>
               </div>
 
               {list.length === 0 ? (
-                <div style={{ padding: '14px 0 2px', borderTop: list.length > 0 ? 'none' : undefined, color: '#374151', fontSize: 12 }}>
+                <div style={{ padding: '10px 0 2px', color: '#6b7280', fontSize: 12 }}>
                   No {label.toLowerCase()} added yet — click Add to configure one.
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {list.map(ch => (
                     <div key={ch.id} style={{
                       display: 'flex', alignItems: 'center', gap: 12,
-                      padding: '11px 14px',
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10,
+                      padding: '10px 14px',
+                      background: '#232d42',
+                      border: '1px solid #2e3a55', borderRadius: 9,
                     }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#d1d5db', flexShrink: 0, minWidth: 100 }}>{ch.label}</span>
-                      <span style={{ fontSize: 12, color: '#4b5563', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#e5e7eb', flexShrink: 0, minWidth: 100 }}>{ch.label}</span>
+                      <span style={{ fontSize: 12, color: '#8896b3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                         {ch.value}
                       </span>
                       <button
                         onClick={() => handleRemove(ch.id)}
-                        style={{ background: 'none', border: 'none', color: '#374151', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                        style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
                         onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
-                        onMouseLeave={e => e.currentTarget.style.color = '#374151'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -255,8 +259,8 @@ export default function Integrations() {
         })}
       </div>
 
-      <p style={{ fontSize: 12, color: '#374151', marginTop: 24, lineHeight: 1.7 }}>
-        Configure which channels fire at each alert distance in the <strong style={{ color: '#6b7280' }}>Team → Routing</strong> tab.
+      <p style={{ fontSize: 12, color: '#6b7280', marginTop: 24, lineHeight: 1.7 }}>
+        Configure which channels fire at each alert distance in the <strong style={{ color: '#9ca3af' }}>Team → Routing</strong> tab.
       </p>
     </div>
   );

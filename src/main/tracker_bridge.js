@@ -75,9 +75,12 @@ async function buildTrackerConfig(token) {
 
   // Team channels — use instead of personal integrations
   const channels = (teamData && teamData.channels) ? teamData.channels : [];
-  const discordCh = channels.find(c => c.integration_type === 'discord' && c.enabled);
-  const slackCh   = channels.find(c => c.integration_type === 'slack'   && c.enabled);
-  const teamsCh   = channels.find(c => c.integration_type === 'teams'   && c.enabled);
+  const discordCh    = channels.find(c => c.integration_type === 'discord'     && c.enabled);
+  const slackCh      = channels.find(c => c.integration_type === 'slack'       && c.enabled);
+  const teamsCh      = channels.find(c => c.integration_type === 'teams'       && c.enabled);
+  const googleChatCh = channels.find(c => c.integration_type === 'google_chat' && c.enabled);
+  const webhookCh    = channels.find(c => c.integration_type === 'webhook'     && c.enabled);
+  const telegramCh   = channels.find(c => c.integration_type === 'telegram'    && c.enabled);
 
   // Quiet hours
   const quietStart = ap.quiet_hours_start || '23:00';
@@ -116,9 +119,12 @@ async function buildTrackerConfig(token) {
 
     // Webhook integrations — sourced from team channels
     integrations: {
-      discord: discordCh ? { enabled: true, webhook_url: discordCh.value } : { enabled: false },
-      slack:   slackCh   ? { enabled: true, webhook_url: slackCh.value   } : { enabled: false },
-      teams:   teamsCh   ? { enabled: true, webhook_url: teamsCh.value   } : { enabled: false },
+      discord:     discordCh    ? { enabled: true, webhook_url: discordCh.value    } : { enabled: false },
+      slack:       slackCh      ? { enabled: true, webhook_url: slackCh.value      } : { enabled: false },
+      teams:       teamsCh      ? { enabled: true, webhook_url: teamsCh.value      } : { enabled: false },
+      google_chat: googleChatCh ? { enabled: true, webhook_url: googleChatCh.value } : { enabled: false },
+      webhook:     webhookCh    ? { enabled: true, webhook_url: webhookCh.value    } : { enabled: false },
+      telegram:    telegramCh   ? { enabled: true, value: telegramCh.value         } : { enabled: false },
     },
 
     monitoring: {

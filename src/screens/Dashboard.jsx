@@ -565,7 +565,7 @@ export default function Dashboard({ onLogout }) {
           <Route path="/aircraft" element={<div style={s.content}><AircraftManager isViewOnly={isViewOnly} /></div>} />
           <Route path="/alerts" element={<div style={s.content}><AlertSettings isViewOnly={isViewOnly} /></div>} />
           <Route path="/integrations" element={<div style={s.content}><Integrations /></div>} />
-          <Route path="/team" element={<div style={s.content}><Teams /></div>} />
+          <Route path="/team" element={<Teams userData={userData} />} />
           <Route path="/logs" element={<div style={s.content}><Logs /></div>} />
         </Routes>
       </div>

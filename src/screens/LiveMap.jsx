@@ -46,9 +46,13 @@ export default function LiveMap() {
 
   // Load airport config once
   useEffect(() => {
-    APIService.getAirportConfig()
-      .then(cfg => setAirportConfig(cfg))
-      .catch(() => setError('No airport configured. Please set up your location in Airport Config first.'));
+    APIService.getTeamAirports()
+      .then(airports => {
+        const active = airports.find(a => a.is_active) || airports[0];
+        if (active) setAirportConfig(active);
+        else setError('No active airport configured for this team.');
+      })
+      .catch(() => setError('No airport configured for this team.'));
   }, []);
 
   // Init map once config is ready
@@ -113,7 +117,7 @@ export default function LiveMap() {
     if (!map) return;
 
     try {
-      const data = await APIService.getLiveAircraft();
+      const data = await APIService.getTeamLiveAircraft();
       const liveAircraft = (data || []).filter(a => a.latitude && a.longitude && !a.on_ground);
       setAircraft(liveAircraft);
       setLastUpdate(new Date());
