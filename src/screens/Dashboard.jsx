@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Plane, Link as LinkIcon, LogOut, Bell, MapPin, LayoutDashboard, Map, ScrollText, CheckCircle, Circle, ArrowRight, X, MessageSquare, BookOpen, Users } from 'lucide-react';
+import { LogOut, LayoutDashboard, Map, ScrollText, MessageSquare, BookOpen, Users } from 'lucide-react';
 import StorageService from '../services/storage';
 import APIService from '../services/api';
-import AirportConfig from './AirportConfig';
-import AlertSettings from './AlertSettings';
-import Integrations from './Integrations';
 import AccountDashboard from './AccountDashboard';
-import AircraftManager from './AircraftManager';
 import TrackerStatus from './TrackerStatus';
 import LiveMap from './LiveMap';
 import Logs from './Logs';
@@ -15,28 +11,28 @@ import Teams from './Teams';
 
 const ONBOARDING_STEPS = [
   {
-    key: 'location',
-    icon: '📍',
-    title: 'Set your location',
-    desc: 'Configure your airport or FBO coordinates so FinalPing knows where to watch for aircraft.',
-    action: 'Go to Airport Config',
-    route: '/dashboard/airport',
+    key: 'team',
+    icon: '👥',
+    title: 'Set up your team',
+    desc: 'Invite members, assign roles, and configure who receives alerts and when.',
+    action: 'Go to Team',
+    route: '/dashboard/team',
   },
   {
     key: 'aircraft',
     icon: '✈️',
-    title: 'Add your first aircraft',
-    desc: 'Enter a tail number and ICAO24 code for each aircraft you want to track.',
-    action: 'Go to Aircraft',
-    route: '/dashboard/aircraft',
+    title: 'Add your aircraft',
+    desc: 'Enter tail numbers and ICAO24 codes for the aircraft your team tracks.',
+    action: 'Go to Aircraft in Team',
+    route: '/dashboard/team',
   },
   {
-    key: 'integration',
+    key: 'channels',
     icon: '🔔',
-    title: 'Add a notification channel',
-    desc: 'Add Discord, Slack, SMS, or email channels to your team so alerts reach everyone instantly.',
-    action: 'Go to Integrations',
-    route: '/dashboard/integrations',
+    title: 'Connect your channels',
+    desc: 'Set up Discord, Slack, or Microsoft Teams so alerts reach the right people.',
+    action: 'Go to Channels in Team',
+    route: '/dashboard/team',
   },
 ];
 
@@ -59,7 +55,6 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
         boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
         overflow: 'hidden',
       }}>
-        {/* Header */}
         <div style={{
           padding: '24px 24px 20px',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -67,7 +62,7 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
         }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0ea5e9', marginBottom: 4 }}>
-              Welcome to FinalPing
+              Welcome to FinalPing for Teams
             </div>
             <div style={{ fontSize: 18, fontWeight: 700, color: '#f9fafb' }}>
               Get set up in 3 steps
@@ -81,7 +76,6 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
           </button>
         </div>
 
-        {/* Step indicators */}
         <div style={{ display: 'flex', padding: '16px 24px 0', gap: 8 }}>
           {ONBOARDING_STEPS.map((s, i) => (
             <div key={s.key} style={{
@@ -92,7 +86,6 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
           ))}
         </div>
 
-        {/* Step content */}
         <div style={{ padding: '24px 24px 8px' }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>{step.icon}</div>
           <div style={{ fontSize: 16, fontWeight: 700, color: '#f9fafb', marginBottom: 8 }}>
@@ -102,7 +95,6 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
             {step.desc}
           </p>
 
-          {/* All steps list */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
             {ONBOARDING_STEPS.map((s, i) => (
               <div key={s.key} style={{
@@ -131,7 +123,6 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
           </div>
         </div>
 
-        {/* Actions */}
         <div style={{ padding: '0 24px 24px', display: 'flex', gap: 10 }}>
           <button
             onClick={() => onNavigate(step.route)}
@@ -189,6 +180,8 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
   );
 }
 
+const isWindows = window.electronAPI?.platform === 'win32';
+
 const s = {
   shell: {
     display: 'flex',
@@ -215,18 +208,27 @@ const s = {
     pointerEvents: 'none',
   },
   logoArea: {
-    padding: '20px 16px 18px',
+    padding: '36px 16px 18px',
     borderBottom: '1px solid rgba(255,255,255,0.07)',
     position: 'relative',
     zIndex: 1,
+    WebkitAppRegion: 'drag',
   },
   logoTop: {
     fontSize: '8px', fontWeight: '700', letterSpacing: '0.18em',
-    textTransform: 'uppercase', color: '#6b7280', lineHeight: 1, marginBottom: '2px',
+    textTransform: 'uppercase', color: '#6b7280', lineHeight: 1, marginBottom: '6px',
   },
   logoMain: {
     fontSize: '18px', fontWeight: '800', letterSpacing: '-0.02em',
     color: '#f9fafb', lineHeight: 1.1,
+  },
+  logoTeamsBadge: {
+    fontSize: '8px', fontWeight: '800', letterSpacing: '0.1em',
+    textTransform: 'uppercase', color: '#0ea5e9',
+    background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.28)',
+    padding: '2px 6px', borderRadius: '4px',
+    verticalAlign: 'middle', display: 'inline-block', marginLeft: '6px',
+    lineHeight: '14px',
   },
   logoLine: {
     display: 'block', width: '40px', height: '2px',
@@ -265,17 +267,6 @@ const s = {
     padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.07)',
     position: 'relative', zIndex: 1,
   },
-  tierBadge: {
-    padding: '10px 14px',
-    background: 'linear-gradient(135deg, rgba(14,165,233,0.08), rgba(2,132,199,0.04))',
-    borderRadius: '10px', marginBottom: '8px',
-    border: '1px solid rgba(14,165,233,0.15)',
-  },
-  tierLabel: {
-    fontSize: '10px', color: '#4b5563',
-    textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '3px',
-  },
-  tierValue: { fontSize: '13px', fontWeight: '700', color: '#0ea5e9', textTransform: 'capitalize' },
   logoutBtn: {
     display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
     padding: '9px 12px', background: 'none', border: '1px solid transparent',
@@ -287,7 +278,7 @@ const s = {
     display: 'flex', flexDirection: 'column',
     background: 'radial-gradient(ellipse 100% 50% at 50% -10%, #0d1f2d 0%, #0b0b0b 60%)',
   },
-  content: { padding: '32px', overflowY: 'auto', flex: 1 },
+  content: { padding: '32px', paddingRight: isWindows ? 150 : 32, overflowY: 'auto', flex: 1 },
 };
 
 function DashboardHome({ isViewOnly }) {
@@ -312,18 +303,15 @@ export default function Dashboard({ onLogout }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Track visited routes and mark steps complete when user returns to dashboard
   useEffect(() => {
     const currentPath = location.pathname;
 
-    // Record which step routes have been visited
     ONBOARDING_STEPS.forEach(step => {
       if (currentPath === step.route) {
         setVisitedRoutes(prev => new Set([...prev, step.key]));
       }
     });
 
-    // When user returns to dashboard, mark any visited step routes as complete
     if (currentPath === '/dashboard' || currentPath === '/dashboard/') {
       setVisitedRoutes(prev => {
         if (prev.size > 0) {
@@ -339,7 +327,6 @@ export default function Dashboard({ onLogout }) {
 
   useEffect(() => { loadUserData(); }, []);
 
-  // Listen for connection state changes from axios interceptor
   useEffect(() => {
     const unsubscribe = APIService.onConnectionChange((connected) => {
       setConnectionLost(!connected);
@@ -363,7 +350,6 @@ export default function Dashboard({ onLogout }) {
         }
       }).catch(() => {});
 
-      // Only check onboarding once per session using a ref
       if (!onboardingChecked.current) {
         onboardingChecked.current = true;
         const onboardingKey = `onboardingComplete_${data?.email || 'default'}`;
@@ -389,7 +375,6 @@ export default function Dashboard({ onLogout }) {
 
   const confirmLogout = async () => {
     setShowLogoutConfirm(false);
-    if (window.electronAPI) await window.electronAPI.trackerStop();
     await onLogout();
   };
 
@@ -402,7 +387,6 @@ export default function Dashboard({ onLogout }) {
   }
 
   const path = location.pathname;
-
   const isViewOnly = !userData?.license_tier || userData.license_tier === 'free';
 
   return (
@@ -422,7 +406,7 @@ export default function Dashboard({ onLogout }) {
               <LogOut size={18} color='#f87171' />
               <span style={{ color: '#f1f5f9', fontSize: '15px', fontWeight: 700 }}>Log out</span>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 22px' }}>Are you sure you want to log out of FinalPing?</p>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 22px' }}>Are you sure you want to log out of FinalPing for Teams?</p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowLogoutConfirm(false)}
@@ -437,7 +421,6 @@ export default function Dashboard({ onLogout }) {
         </div>
       )}
 
-      {/* Connection lost banner */}
       {connectionLost && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
@@ -451,7 +434,6 @@ export default function Dashboard({ onLogout }) {
         </div>
       )}
 
-      {/* View-only banner for free accounts */}
       {isViewOnly && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9997,
@@ -474,24 +456,24 @@ export default function Dashboard({ onLogout }) {
           </button>
         </div>
       )}
+
       <div style={s.sidebar}>
         <div style={s.sidebarGlow} />
 
         <div style={s.logoArea}>
-          <div style={s.logoTop}>Team Management</div>
-          <div style={s.logoMain}>FinalPing for Teams</div>
+          <div style={s.logoTop}>Aircraft Alerts</div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={s.logoMain}>FinalPing</div>
+            <span style={s.logoTeamsBadge}>Teams</span>
+          </div>
           <span style={s.logoLine} />
-          <div style={s.logoEmail}>{userData?.email}</div>
+          <div style={s.logoEmail}>{userData?.display_name || userData?.email}</div>
         </div>
 
         <nav style={s.nav}>
           <div style={s.navSection}>Menu</div>
           <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" active={path === '/dashboard' || path === '/dashboard/'} />
-          <NavItem to="/dashboard/aircraft" icon={Plane} label="Aircraft" active={path === '/dashboard/aircraft'} />
           <NavItem to="/dashboard/map" icon={Map} label="Live Map" active={path === '/dashboard/map'} />
-          <NavItem to="/dashboard/airport" icon={MapPin} label="Airport Config" active={path === '/dashboard/airport'} />
-          <NavItem to="/dashboard/alerts" icon={Bell} label="Alerts" active={path === '/dashboard/alerts'} />
-          <NavItem to="/dashboard/integrations" icon={LinkIcon} label="Integrations" active={path === '/dashboard/integrations'} />
           <NavItem to="/dashboard/team" icon={Users} label="Team" active={path === '/dashboard/team'} />
           <NavItem to="/dashboard/logs" icon={ScrollText} label="Logs" active={path === '/dashboard/logs'} />
         </nav>
@@ -551,21 +533,14 @@ export default function Dashboard({ onLogout }) {
         </div>
       </div>
 
+      {/* Invisible drag strip — spans the full top of the window */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 36, WebkitAppRegion: 'drag', zIndex: 9999, pointerEvents: 'none' }} />
+
       <div style={{ ...s.main, paddingTop: (connectionLost ? 36 : 0) + (isViewOnly ? 36 : 0) }}>
         <Routes>
-          {/* Full-bleed routes — no maxWidth, no padding wrapper */}
           <Route path="/map" element={<LiveMap />} />
-          <Route path="/airport" element={
-            <div style={{ flex: 1, padding: '20px 24px 20px 32px', overflow: 'hidden', boxSizing: 'border-box', height: '100%' }}>
-              <AirportConfig isViewOnly={isViewOnly} />
-            </div>
-          } />
-          {/* Standard padded routes */}
           <Route path="/" element={<div style={s.content}><DashboardHome isViewOnly={isViewOnly} /></div>} />
-          <Route path="/aircraft" element={<div style={s.content}><AircraftManager isViewOnly={isViewOnly} /></div>} />
-          <Route path="/alerts" element={<div style={s.content}><AlertSettings isViewOnly={isViewOnly} /></div>} />
-          <Route path="/integrations" element={<div style={s.content}><Integrations /></div>} />
-          <Route path="/team" element={<Teams userData={userData} />} />
+          <Route path="/team" element={<Teams />} />
           <Route path="/logs" element={<div style={s.content}><Logs /></div>} />
         </Routes>
       </div>

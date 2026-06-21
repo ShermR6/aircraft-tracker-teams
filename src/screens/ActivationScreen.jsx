@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plane, Key, Mail, ArrowRight, Loader, Shield, Zap, Bell, Eye, EyeOff } from 'lucide-react';
+import { Key, Mail, ArrowRight, Loader, Shield, Zap, Bell, Eye, EyeOff, Users } from 'lucide-react';
 import APIService from '../services/api';
 import StorageService from '../services/storage';
 
@@ -47,22 +47,6 @@ const s = {
     marginBottom: '64px',
     position: 'relative',
     zIndex: 1,
-  },
-  logoIcon: {
-    width: '48px',
-    height: '48px',
-    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-    borderRadius: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 0 24px #3b82f640',
-  },
-  logoText: {
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#f9fafb',
-    margin: 0,
   },
   heroTitle: {
     fontSize: '36px',
@@ -296,6 +280,7 @@ const s = {
 
 export default function ActivationScreen({ onSuccess }) {
   const [tab, setTab] = useState('signin'); // 'signin' | 'activate'
+  const [appVersion, setAppVersion] = useState('');
 
   // Sign in state
   const [loginEmail, setLoginEmail] = useState('');
@@ -310,6 +295,10 @@ export default function ActivationScreen({ onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [agreed, setAgreed] = useState(false);
+
+  React.useEffect(() => {
+    window.electronAPI?.getAppVersion().then(v => setAppVersion(v)).catch(() => {});
+  }, []);
 
   const openLink = (url) => {
     if (window.electronAPI?.openExternal) window.electronAPI.openExternal(url);
@@ -330,6 +319,7 @@ export default function ActivationScreen({ onSuccess }) {
       await StorageService.setUserData({
         email: data.email,
         user_id: data.user_id,
+        display_name: data.display_name || null,
         license_tier: data.license_tier,
       });
       onSuccess(data);
@@ -351,35 +341,23 @@ export default function ActivationScreen({ onSuccess }) {
       setError('You must agree to the Terms of Service and Privacy Policy to continue.');
       return;
     }
-    if (!licenseKey.trim().toUpperCase().startsWith('FPT-')) {
-      setError('FinalPing for Teams requires a Teams license key starting with FPT-. Personal license keys are not accepted here.');
+    if (licenseKey.trim().toUpperCase().startsWith('FP-')) {
+      setError('This appears to be a personal FinalPing license key. FinalPing for Teams requires a key starting with FPT-.');
       return;
     }
     setLoading(true);
     setError('');
     try {
-      console.log('Step 1: Calling API...');
       const data = await APIService.activateLicense(licenseKey.trim(), email.trim());
-      console.log('Step 2: API response:', JSON.stringify(data));
-
-      console.log('Step 3: Saving token...');
       await StorageService.setToken(data.access_token);
-      console.log('Step 4: Token saved');
-
-      console.log('Step 5: Saving user data...');
       await StorageService.setUserData({
         email: data.email,
         user_id: data.user_id,
+        display_name: data.display_name || null,
         license_tier: data.license_tier,
       });
-      console.log('Step 6: User data saved');
-
-      console.log('Step 7: Calling onSuccess...');
       onSuccess(data);
-      console.log('Step 8: Done');
     } catch (err) {
-      console.error('Activation error:', err);
-      console.error('Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
       const msg = err.response?.data?.detail || 'Activation failed. Please check your license key and email.';
       setError(msg);
     } finally {
@@ -399,52 +377,53 @@ export default function ActivationScreen({ onSuccess }) {
         <div style={s.logoRow}>
           <div>
             <div style={{ fontSize: '9px', fontWeight: '700', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#6b7280', lineHeight: 1, marginBottom: '2px' }}>Team Management</div>
-            <div style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.02em', color: '#f9fafb', lineHeight: 1.1 }}>FinalPing for Teams</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.02em', color: '#f9fafb', lineHeight: 1.1 }}>FinalPing</div>
+            <div style={{ fontSize: '14px', fontWeight: '600', letterSpacing: '-0.01em', color: '#0ea5e9', lineHeight: 1.1 }}>for Teams</div>
             <div style={{ width: '40px', height: '2px', background: 'linear-gradient(90deg, #0ea5e9, transparent)', borderRadius: '999px', marginTop: '4px' }} />
           </div>
         </div>
 
         <h1 style={s.heroTitle}>
-          Alert your whole team.<br />
-          <span style={s.heroAccent}>The moment it matters.</span>
+          Track aircraft.<br />
+          <span style={s.heroAccent}>Keep your team informed.</span>
         </h1>
         <p style={s.heroSub}>
-          Real-time ADS-B alerts for teams. Route notifications to multiple SMS numbers, Discord channels, and Slack workspaces — all from one app.
+          Real-time ADS-B monitoring with team-wide alerts, shared dashboards, and role-based access for your entire organization.
         </p>
 
         <div style={s.featureList}>
           <div style={s.featureItem}>
-            <div style={s.featureIcon('#3b82f6')}><Plane size={16} color="#60a5fa" /></div>
+            <div style={s.featureIcon('#3b82f6')}><Users size={16} color="#60a5fa" /></div>
             <div>
-              <p style={s.featureTitle}>Multi-Recipient Alerts</p>
-              <p style={s.featureSub}>Blast alerts to your entire ramp team via SMS, Discord, Slack, or email simultaneously.</p>
+              <p style={s.featureTitle}>Team Dashboard</p>
+              <p style={s.featureSub}>Shared live map and aircraft status visible to your whole team in real time.</p>
             </div>
           </div>
           <div style={s.featureItem}>
             <div style={s.featureIcon('#34d399')}><Bell size={16} color="#34d399" /></div>
             <div>
-              <p style={s.featureTitle}>Smart Routing</p>
-              <p style={s.featureSub}>Configure which channels fire at 10nm, 5nm, 2nm, and landing — independently per distance.</p>
+              <p style={s.featureTitle}>Team Alerts</p>
+              <p style={s.featureSub}>Proximity alerts routed to team channels — Discord, Slack, or Microsoft Teams.</p>
             </div>
           </div>
           <div style={s.featureItem}>
-            <div style={s.featureIcon('#a78bfa')}><Zap size={16} color="#a78bfa" /></div>
+            <div style={s.featureIcon('#a78bfa')}><Shield size={16} color="#a78bfa" /></div>
             <div>
-              <p style={s.featureTitle}>Team Member Management</p>
-              <p style={s.featureSub}>Invite teammates by email, assign roles, and manage who receives what — all in-app.</p>
+              <p style={s.featureTitle}>Roles & Permissions</p>
+              <p style={s.featureSub}>Assign admin, dispatcher, and viewer roles to control who can do what.</p>
             </div>
           </div>
           <div style={s.featureItem}>
-            <div style={s.featureIcon('#f59e0b')}><Shield size={16} color="#fbbf24" /></div>
+            <div style={s.featureIcon('#f59e0b')}><Zap size={16} color="#fbbf24" /></div>
             <div>
-              <p style={s.featureTitle}>Activity Log</p>
-              <p style={s.featureSub}>See every alert that fired, who was notified, and who acknowledged — full team visibility.</p>
+              <p style={s.featureTitle}>On-Duty Scheduling</p>
+              <p style={s.featureSub}>Set who&apos;s on duty and route alerts only to the right people at the right time.</p>
             </div>
           </div>
         </div>
 
         <div style={s.leftFooter}>
-          <p style={s.leftFooterText}>v1.0.0 · © 2026 FinalPing · <a href="https://finalpingapp.com" onClick={e => { e.preventDefault(); window.electronAPI?.openExternal('https://finalpingapp.com'); }} style={{ color: '#4b5563', textDecoration: 'none' }}>FinalPingApp.com</a></p>
+          <p style={s.leftFooterText}>{appVersion ? `v${appVersion}` : ''} · © 2026 FinalPing · <a href="https://finalpingapp.com" onClick={e => { e.preventDefault(); window.electronAPI?.openExternal('https://finalpingapp.com'); }} style={{ color: '#4b5563', textDecoration: 'none' }}>FinalPingApp.com</a></p>
         </div>
       </div>
 
@@ -472,7 +451,7 @@ export default function ActivationScreen({ onSuccess }) {
           {tab === 'signin' && (
             <>
               <h2 style={s.formTitle}>Welcome back</h2>
-              <p style={s.formSub}>Sign in with your FinalPing account</p>
+              <p style={s.formSub}>Sign in with your FinalPing for Teams account</p>
 
               {loginError && <div style={s.errorBox}>{loginError}</div>}
 
@@ -509,12 +488,12 @@ export default function ActivationScreen({ onSuccess }) {
 
               <div style={s.divider}>
                 <div style={s.dividerLine} />
-                <span style={s.dividerText}>New to FinalPing?</span>
+                <span style={s.dividerText}>New to FinalPing for Teams?</span>
                 <div style={s.dividerLine} />
               </div>
 
               <div style={s.purchaseBox}>
-                <p style={s.purchaseText}>Don&apos;t have an account? Get a license key first</p>
+                <p style={s.purchaseText}>Don&apos;t have an account? Get a teams license key first</p>
                 <a href="https://finalpingapp.com/pricing"
                   onClick={e => { e.preventDefault(); openLink('https://finalpingapp.com/pricing'); }}
                   style={s.purchaseBtn}
@@ -536,7 +515,7 @@ export default function ActivationScreen({ onSuccess }) {
           {tab === 'activate' && (
             <>
               <h2 style={s.formTitle}>Activate your license</h2>
-              <p style={s.formSub}>Enter your license key and email to get started</p>
+              <p style={s.formSub}>Enter your FPT- license key and email to get started</p>
 
               {error && <div style={s.errorBox}>{error}</div>}
 
@@ -578,22 +557,22 @@ export default function ActivationScreen({ onSuccess }) {
 
               <div style={s.divider}>
                 <div style={s.dividerLine} />
-                <span style={s.dividerText}>Don&apos;t have a license?</span>
+                <span style={s.dividerText}>Don&apos;t have a teams license?</span>
                 <div style={s.dividerLine} />
               </div>
 
               <div style={s.purchaseBox}>
-                <p style={s.purchaseText}>Need a Teams license? Contact us to get set up</p>
-                <a href="https://finalpingapp.com/contact"
-                  onClick={e => { e.preventDefault(); openLink('https://finalpingapp.com/contact'); }}
+                <p style={s.purchaseText}>Get a FinalPing for Teams license to start tracking</p>
+                <a href="https://finalpingapp.com/pricing"
+                  onClick={e => { e.preventDefault(); openLink('https://finalpingapp.com/pricing'); }}
                   style={s.purchaseBtn}
                   onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(135deg, #a78bfa30, #6366f130)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(135deg, #a78bfa20, #6366f120)'}>
-                  <Zap size={13} /> Contact FinalPingApp.com
+                  <Zap size={13} /> Purchase at FinalPingApp.com
                 </a>
               </div>
 
-              <p style={s.formFooter}>Your Teams license key (FPT-...) was sent to you after purchase.</p>
+              <p style={s.formFooter}>Your license key (starting with FPT-) was emailed to you after purchase.</p>
             </>
           )}
 
