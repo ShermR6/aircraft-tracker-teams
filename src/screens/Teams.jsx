@@ -412,7 +412,8 @@ function MembersTab({ team, myRole, onDuty, onRefresh }) {
                 <span style={{ ...(onDutyNow ? s.greenDot : s.grayDot), position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, border: '2px solid ' + CARD }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#f9fafb' }}>{m.display_name || m.email}</div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#f9fafb' }}>{m.display_name || m.email.split('@')[0]}</div>
+                <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>{m.email}</div>
                 <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>
                   {m.custom_role_name ? <Badge color={m.custom_role_color || '#9ca3af'}>{m.custom_role_name}</Badge> : <Badge color={rs.color}>{rs.label}</Badge>}
                   {onDutyNow && <span style={{ marginLeft: 8, color: G, fontSize: 11 }}>● On Duty</span>}
