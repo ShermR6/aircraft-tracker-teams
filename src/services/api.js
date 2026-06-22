@@ -449,6 +449,13 @@ class APIService {
     const response = await this.client.put('/api/teams/escalation-config', data);
     return response.data;
   }
+
+  // Not available in Teams — TrackerStatus checks for 403 to hide the ground station row
+  async getGroundStationStatus() {
+    const err = new Error('No ground station on Teams plan');
+    err.response = { status: 403 };
+    throw err;
+  }
 }
 
 export default new APIService();

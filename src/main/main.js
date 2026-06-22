@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Tray, Menu, dialog, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const tracker = require('./tracker_bridge');
@@ -112,7 +112,13 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
     },
     backgroundColor: '#0f1117',
-    titleBarStyle: 'default',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 16, y: 22 },
+    titleBarOverlay: {
+      color: '#00000000',
+      symbolColor: '#ffffff',
+      height: 48,
+    },
   });
 
   // Override CSP
@@ -141,30 +147,9 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // Intercept close button — ask user what to do
-  mainWindow.on('close', (e) => {
-    if (forceQuit) return; // allow quit from tray menu or update restart
-    e.preventDefault();
-    dialog.showMessageBox(mainWindow, {
-      type: 'question',
-      buttons: ['Minimize to Tray', 'Exit', 'Cancel'],
-      defaultId: 0,
-      cancelId: 2,
-      title: 'Exit FinalPing for Teams?',
-      message: 'Exit FinalPing for Teams?',
-      detail: 'Your cloud tracker will continue running and sending alerts even after closing. Minimize to tray to keep the app accessible from the taskbar.',
-    }).then(({ response }) => {
-      if (response === 0) {
-        // Minimize to tray
-        mainWindow.hide();
-      } else if (response === 1) {
-        // Exit
-        forceQuit = true;
-        tracker.stopTracker();
-        app.quit();
-      }
-      // response === 2 (Cancel) or X clicked — do nothing, return to app
-    });
+  // X closes and quits — cloud tracker keeps running server-side regardless
+  mainWindow.on('close', () => {
+    forceQuit = true;
   });
 
   mainWindow.on('closed', () => { mainWindow = null; });
@@ -188,6 +173,7 @@ function createWindow() {
     mainWindow.webContents.focus();
     if (isPackaged) {
       setTimeout(() => autoUpdater.checkForUpdates(), 3000);
+      setInterval(() => autoUpdater.checkForUpdates(), 60 * 60 * 1000);
     }
   });
 

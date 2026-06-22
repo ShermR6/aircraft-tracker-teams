@@ -75,20 +75,25 @@ const ROLE_STYLES = {
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const CHANNEL_TYPES = [
-  { key: 'sms', label: 'SMS', Icon: Phone },
-  { key: 'discord', label: 'Discord', Icon: Hash },
-  { key: 'slack', label: 'Slack', Icon: Hash },
-  { key: 'email', label: 'Email', Icon: Mail },
-  { key: 'webhook', label: 'Webhook', Icon: Globe },
+  { key: 'sms',         label: 'SMS',          Icon: Phone,  color: '#22d3a3', desc: 'Text message alerts to any phone number' },
+  { key: 'discord',     label: 'Discord',      Icon: Hash,   color: '#5865F2', desc: 'Send alerts to a Discord channel via webhook' },
+  { key: 'slack',       label: 'Slack',        Icon: Hash,   color: '#4A154B', desc: 'Post alerts to a Slack channel via webhook' },
+  { key: 'email',       label: 'Email',        Icon: Mail,   color: '#f59e0b', desc: 'Send alert emails to any address' },
+  { key: 'teams',       label: 'MS Teams',     Icon: Users,  color: '#6264A7', desc: 'Send alerts to a Microsoft Teams channel' },
+  { key: 'telegram',    label: 'Telegram',     Icon: Globe,  color: '#26A5E4', desc: 'Send alerts to a Telegram bot or channel' },
+  { key: 'google_chat', label: 'Google Chat',  Icon: Globe,  color: '#1a73e8', desc: 'Post alerts to a Google Chat space' },
+  { key: 'webhook',     label: 'Webhook',      Icon: GitBranch, color: '#6b7280', desc: 'POST alert data to any custom HTTP endpoint' },
 ];
 
 const CHANNEL_META = {
-  sms:     { valueLabel: 'Phone Number',  valuePlaceholder: '+1 555 000 0000',                          namePlaceholder: 'Main Line' },
-  discord: { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://discord.com/api/webhooks/...',    namePlaceholder: 'Main Discord' },
-  slack:   { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://hooks.slack.com/services/...',    namePlaceholder: 'Main Slack' },
-  email:   { valueLabel: 'Email Address', valuePlaceholder: 'alerts@yourcompany.com',                  namePlaceholder: 'Ops Email' },
-  webhook: { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://...',                              namePlaceholder: 'Custom Hook' },
-  teams:   { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://...office365.com/webhook/...',    namePlaceholder: 'Main Teams' },
+  sms:         { valueLabel: 'Phone Number',  valuePlaceholder: '+1 555 000 0000',                                namePlaceholder: 'Main Line',       hint: 'E.164 format — include country code' },
+  discord:     { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://discord.com/api/webhooks/...',          namePlaceholder: 'Ops Channel',     hint: 'Discord → channel settings → Integrations → Webhooks' },
+  slack:       { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://hooks.slack.com/services/...',          namePlaceholder: 'Ops Channel',     hint: 'Slack → App Directory → Incoming Webhooks' },
+  email:       { valueLabel: 'Email Address', valuePlaceholder: 'alerts@company.com',                            namePlaceholder: 'Ops Email',       hint: 'Can be a personal or distribution list address' },
+  teams:       { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://...office365.com/webhook/...',          namePlaceholder: 'Main Teams',      hint: 'Teams → channel → ⋯ → Connectors → Incoming Webhook' },
+  telegram:    { valueLabel: 'Chat ID',       valuePlaceholder: '-1001234567890',                                namePlaceholder: 'Ops Channel',     hint: 'Set TELEGRAM_BOT_TOKEN env var; use @userinfobot to get Chat ID' },
+  google_chat: { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://chat.googleapis.com/v1/spaces/...',    namePlaceholder: 'Ops Space',       hint: 'Google Chat → space → Manage webhooks → Add' },
+  webhook:     { valueLabel: 'Webhook URL',   valuePlaceholder: 'https://your-server.com/hook',                  namePlaceholder: 'Custom Hook',     hint: 'Will receive a POST with JSON alert payload' },
 };
 
 const AIRPORT_DIST_OPTIONS = [1, 2, 3, 5, 7, 10, 15, 20];
@@ -630,7 +635,14 @@ function ShiftModal({ shift, members, onClose, onSave }) {
 
         <div>
           <FieldLabel>Timezone</FieldLabel>
-          <input value={tz} onChange={e => setTz(e.target.value)} placeholder="America/Chicago" style={s.input} />
+          <select value={tz} onChange={e => setTz(e.target.value)} style={{ ...s.input, colorScheme: 'dark' }}>
+            {(Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : [
+              'America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
+              'America/Anchorage','Pacific/Honolulu','Europe/London','Europe/Paris','Europe/Berlin',
+              'Europe/Moscow','Asia/Dubai','Asia/Kolkata','Asia/Tokyo','Asia/Shanghai',
+              'Australia/Sydney','Pacific/Auckland','UTC',
+            ]).map(z => <option key={z} value={z}>{z.replace(/_/g,' ')}</option>)}
+          </select>
         </div>
 
         <div>
@@ -665,6 +677,7 @@ function ChannelsTab({ team, onRefresh }) {
   const [label, setLabel] = useState('');
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
+  const [removing, setRemoving] = useState(null);
 
   const channels = team?.channels || [];
 
@@ -677,51 +690,115 @@ function ChannelsTab({ team, onRefresh }) {
   };
 
   const handleRemove = async (id) => {
+    setRemoving(id);
     try { await APIService.removeTeamChannel(id); onRefresh(); } catch { }
+    setRemoving(null);
   };
 
+  const meta = showAdd ? CHANNEL_META[showAdd] : null;
+  const typeMeta = showAdd ? CHANNEL_TYPES.find(t => t.key === showAdd) : null;
+
   return (
-    <div style={{ padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: '#f9fafb' }}>Notification Channels</span>
+    <div style={{ padding: 24, maxWidth: 860 }}>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: '#f9fafb', margin: '0 0 4px 0' }}>Notification Channels</h2>
+        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Connect your preferred services to receive real-time aircraft alerts.</p>
       </div>
       <InlineError msg={error} />
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {CHANNEL_TYPES.map(({ key, label: lbl, Icon }) => (
-          <button key={key} onClick={() => { setShowAdd(key); setLabel(''); setValue(''); }} style={{ ...s.btn('ghost'), display: 'flex', gap: 6, alignItems: 'center' }}>
-            <Icon size={14} />{lbl}
-          </button>
-        ))}
+      {/* Integration cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 28 }}>
+        {CHANNEL_TYPES.map(({ key, label: lbl, Icon, color, desc }) => {
+          const configured = channels.filter(c => c.integration_type === key);
+          return (
+            <div key={key} style={{ background: '#0f1319', border: `1px solid rgba(255,255,255,0.07)`, borderRadius: 12, padding: '16px 16px 14px', cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = color + '55'; e.currentTarget.style.boxShadow = `0 0 0 1px ${color}22`; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.boxShadow = 'none'; }}
+              onClick={() => { setShowAdd(key); setLabel(''); setValue(''); setError(''); }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: color + '22', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon size={18} color={color} />
+                </div>
+                {configured.length > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#22d3a322', color: G, border: '1px solid #22d3a344' }}>
+                    {configured.length} active
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb', marginBottom: 4 }}>{lbl}</div>
+              <div style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.5 }}>{desc}</div>
+            </div>
+          );
+        })}
       </div>
 
-      {channels.length === 0 ? (
-        <div style={{ color: '#4b5563', fontSize: 13, textAlign: 'center', paddingTop: 20 }}>No channels configured yet</div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {channels.map(ch => (
-            <div key={ch.id} style={{ ...s.card, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#f9fafb' }}>{ch.label}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{ch.integration_type} · {ch.value}</div>
-              </div>
-              <button onClick={() => handleRemove(ch.id)} style={{ ...s.btn('danger'), padding: '5px 8px' }}><Trash2 size={13} /></button>
-            </div>
-          ))}
+      {/* Active channels list */}
+      {channels.length > 0 && (
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Active Channels ({channels.length})</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {channels.map(ch => {
+              const ct = CHANNEL_TYPES.find(t => t.key === ch.integration_type);
+              const Icon = ct?.Icon || Globe;
+              const color = ct?.color || '#6b7280';
+              return (
+                <div key={ch.id} style={{ background: '#131b27', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 9, background: color + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={16} color={color} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb' }}>{ch.label}</div>
+                    <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {ct?.label} · {ch.value.length > 40 ? ch.value.slice(0, 40) + '…' : ch.value}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: G, boxShadow: `0 0 6px ${G}` }} />
+                    <button onClick={() => handleRemove(ch.id)} disabled={removing === ch.id}
+                      style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: removing === ch.id ? 'transparent' : '#ef444415', color: '#ef4444', cursor: removing === ch.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: removing === ch.id ? 0.5 : 1 }}>
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {channels.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '32px 20px', background: '#0f1319', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.08)' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(34,211,163,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+            <Radio size={22} color={G} />
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#f9fafb', marginBottom: 6 }}>No channels yet</div>
+          <div style={{ fontSize: 13, color: '#4b5563' }}>Click any integration above to add your first channel.</div>
         </div>
       )}
 
       {showAdd && (
-        <Modal title={`Add ${CHANNEL_TYPES.find(t => t.key === showAdd)?.label} Channel`} onClose={() => setShowAdd(null)}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Modal title={`Connect ${typeMeta?.label}`} onClose={() => setShowAdd(null)} width={460}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Integration icon + desc */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', background: (typeMeta?.color || '#6b7280') + '12', borderRadius: 10, border: `1px solid ${typeMeta?.color || '#6b7280'}22` }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: (typeMeta?.color || '#6b7280') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {typeMeta && <typeMeta.Icon size={20} color={typeMeta.color} />}
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb' }}>{typeMeta?.label}</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{typeMeta?.desc}</div>
+              </div>
+            </div>
             <div>
               <FieldLabel>Channel Name</FieldLabel>
-              <input value={label} onChange={e => setLabel(e.target.value)} placeholder={CHANNEL_META[showAdd]?.namePlaceholder || 'Channel name'} style={s.input} />
+              <input value={label} onChange={e => setLabel(e.target.value)} placeholder={meta?.namePlaceholder || 'Channel name'} style={s.input} />
             </div>
             <div>
-              <FieldLabel>{CHANNEL_META[showAdd]?.valueLabel || 'Value'}</FieldLabel>
-              <input value={value} onChange={e => setValue(e.target.value)} placeholder={CHANNEL_META[showAdd]?.valuePlaceholder || ''} style={s.input} />
+              <FieldLabel>{meta?.valueLabel || 'Value'}</FieldLabel>
+              <input value={value} onChange={e => setValue(e.target.value)} placeholder={meta?.valuePlaceholder || ''} style={s.input} />
+              {meta?.hint && <div style={{ fontSize: 11, color: '#4b5563', marginTop: 5 }}>{meta.hint}</div>}
             </div>
+            <InlineError msg={error} />
             <ModalActions onCancel={() => setShowAdd(null)} onConfirm={handleAdd} disabled={!label.trim() || !value.trim()} />
           </div>
         </Modal>
@@ -814,48 +891,79 @@ function RoutingTab({ team, onRefresh }) {
 
       {/* Escalation config */}
       {escalation && (
-        <div style={{ marginTop: 28 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Alert Escalation</div>
-          <div style={{ ...s.card, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-              <input type="checkbox" checked={escalation.enabled} onChange={e => setEscalation(x => ({ ...x, enabled: e.target.checked }))} />
-              <span style={{ fontSize: 13, color: '#d1d5db' }}>Enable alert escalation</span>
-            </label>
+        <div style={{ marginTop: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertTriangle size={14} color="#f87171" />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb' }}>Alert Escalation</div>
+              <div style={{ fontSize: 11, color: '#4b5563' }}>Automatically re-notify if an alert is not acknowledged</div>
+            </div>
+          </div>
+          <div style={{ background: '#0f1319', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+            {/* Toggle row */}
+            <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: escalation.enabled ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#f9fafb' }}>Enable escalation</div>
+                <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>Re-alert team members when alerts go unacknowledged</div>
+              </div>
+              <div onClick={() => setEscalation(x => ({ ...x, enabled: !x.enabled }))}
+                style={{ width: 44, height: 24, borderRadius: 12, background: escalation.enabled ? G : '#1e2a3a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', top: 3, left: escalation.enabled ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }} />
+              </div>
+            </div>
             {escalation.enabled && (
-              <>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <FieldLabel>Level 1 after (min)</FieldLabel>
-                    <input type="number" value={escalation.first_escalation_minutes} min={1}
-                      onChange={e => setEscalation(x => ({ ...x, first_escalation_minutes: +e.target.value }))} style={s.input} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <FieldLabel>Level 1 target</FieldLabel>
-                    <select value={escalation.first_escalation_target}
-                      onChange={e => setEscalation(x => ({ ...x, first_escalation_target: e.target.value }))}
-                      style={{ ...s.input, colorScheme: 'dark' }}>
-                      <option value="all_admins">All Admins</option>
-                      <option value="owner">Owner</option>
-                    </select>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <FieldLabel>Level 2 after (min)</FieldLabel>
-                    <input type="number" value={escalation.second_escalation_minutes} min={1}
-                      onChange={e => setEscalation(x => ({ ...x, second_escalation_minutes: +e.target.value }))} style={s.input} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <FieldLabel>Level 2 target</FieldLabel>
-                    <select value={escalation.second_escalation_target}
-                      onChange={e => setEscalation(x => ({ ...x, second_escalation_target: e.target.value }))}
-                      style={{ ...s.input, colorScheme: 'dark' }}>
-                      <option value="all_admins">All Admins</option>
-                      <option value="owner">Owner</option>
-                    </select>
+              <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* Level 1 */}
+                <div style={{ background: '#131b27', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Level 1 — First Escalation</div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <FieldLabel>Escalate after</FieldLabel>
+                      <div style={{ position: 'relative' }}>
+                        <input type="number" value={escalation.first_escalation_minutes} min={1}
+                          onChange={e => setEscalation(x => ({ ...x, first_escalation_minutes: +e.target.value }))} style={s.input} />
+                        <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#4b5563' }}>min</span>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <FieldLabel>Notify</FieldLabel>
+                      <select value={escalation.first_escalation_target}
+                        onChange={e => setEscalation(x => ({ ...x, first_escalation_target: e.target.value }))}
+                        style={{ ...s.input, colorScheme: 'dark' }}>
+                        <option value="all_admins">All Admins</option>
+                        <option value="owner">Team Owner</option>
+                        <option value="all_members">All Members</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </>
+                {/* Level 2 */}
+                <div style={{ background: '#131b27', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#f87171', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Level 2 — Critical Escalation</div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <FieldLabel>Escalate after</FieldLabel>
+                      <div style={{ position: 'relative' }}>
+                        <input type="number" value={escalation.second_escalation_minutes} min={1}
+                          onChange={e => setEscalation(x => ({ ...x, second_escalation_minutes: +e.target.value }))} style={s.input} />
+                        <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#4b5563' }}>min</span>
+                      </div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <FieldLabel>Notify</FieldLabel>
+                      <select value={escalation.second_escalation_target}
+                        onChange={e => setEscalation(x => ({ ...x, second_escalation_target: e.target.value }))}
+                        style={{ ...s.input, colorScheme: 'dark' }}>
+                        <option value="all_admins">All Admins</option>
+                        <option value="owner">Team Owner</option>
+                        <option value="all_members">All Members</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -1113,6 +1221,7 @@ function AirportsTab({ myRole }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [editingDistances, setEditingDistances] = useState(null); // { id, airport_code, dists }
   const searchRef = useRef(null);
   // Add-form map refs
   const mapDivRef = useRef(null);
@@ -1293,6 +1402,13 @@ function AirportsTab({ myRole }) {
 
   const handleSetActive = async (id) => { try { await APIService.setActiveAirport(id); await load(); } catch { } };
   const handleDelete = async (id) => { setConfirmDelete(null); try { await APIService.deleteTeamAirport(id); await load(); } catch { } };
+  const handleSaveDists = async () => {
+    if (!editingDistances) return;
+    try {
+      await APIService.updateTeamAirport(editingDistances.id, { alert_distances_nm: editingDistances.dists.map(String) });
+      setEditingDistances(null); await load();
+    } catch { }
+  };
 
   const inp = { width: '100%', padding: '11px 14px', background: '#0d1117', border: '2px solid #1e2a3a', borderRadius: 8, color: '#f9fafb', fontSize: 15, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' };
 
@@ -1307,6 +1423,35 @@ function AirportsTab({ myRole }) {
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'transparent', border: '1px solid #374151', color: '#9ca3af', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
               <button onClick={() => handleDelete(confirmDelete.id)} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit alert distances modal */}
+      {editingDistances && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#0f1117', border: '1px solid #2d3748', borderRadius: 16, padding: 28, maxWidth: 380, width: '100%' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#f9fafb', margin: '0 0 4px 0' }}>Alert Distances</h2>
+            <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 18px 0' }}>Choose which proximity distances trigger alerts for <strong style={{ color: '#f9fafb' }}>{editingDistances.airport_code}</strong></p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+              {AIRPORT_DIST_OPTIONS.map(d => {
+                const on = editingDistances.dists.includes(d);
+                return (
+                  <button key={d} onClick={() => setEditingDistances(prev => {
+                    const has = prev.dists.includes(d);
+                    if (has && prev.dists.length === 1) return prev;
+                    return { ...prev, dists: has ? prev.dists.filter(x => x !== d) : [...prev.dists, d].sort((a,b) => b-a) };
+                  })} style={{ padding: '8px 16px', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 700, border: 'none', background: on ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)', color: on ? '#38bdf8' : '#4b5563', outline: on ? '1.5px solid rgba(56,189,248,0.4)' : '1px solid transparent' }}>
+                    {d} nm
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 20 }}>Selected: {editingDistances.dists.join(', ')} nm — aircraft triggers alerts at these distances</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setEditingDistances(null)} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'transparent', border: '1px solid #374151', color: '#9ca3af', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleSaveDists} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Save</button>
             </div>
           </div>
         </div>
@@ -1333,26 +1478,40 @@ function AirportsTab({ myRole }) {
             <MapPin size={28} color="#2d3748" style={{ display: 'block', margin: '0 auto 10px' }} />
             No airports configured yet
           </div>
-        ) : airports.map(a => (
-          <div key={a.id} style={{ background: '#131b27', border: `1px solid ${a.is_active ? 'rgba(34,211,163,0.25)' : '#1e2a3a'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 44, height: 44, background: a.is_active ? 'rgba(34,211,163,0.12)' : '#1e3a5f', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: a.is_active ? G : '#60a5fa', flexShrink: 0 }}>
-              {(a.airport_code || '???').slice(0, 4)}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#f9fafb' }}>{a.airport_name || a.airport_code}</span>
-                {a.is_active && <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(34,211,163,0.12)', color: G, border: '1px solid rgba(34,211,163,0.25)' }}>Active</span>}
+        ) : airports.map(a => {
+          const dists = (a.alert_distances_nm || ['10', '5', '2']).map(Number).sort((x,y) => y - x);
+          return (
+            <div key={a.id} style={{ background: '#131b27', border: `1px solid ${a.is_active ? 'rgba(34,211,163,0.25)' : '#1e2a3a'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 44, height: 44, background: a.is_active ? 'rgba(34,211,163,0.12)' : '#1e3a5f', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: a.is_active ? G : '#60a5fa', flexShrink: 0 }}>
+                {(a.airport_code || '???').slice(0, 4)}
               </div>
-              <div style={{ fontSize: 12, color: '#6b7280' }}>{a.airport_code} · {Number(a.latitude).toFixed(4)}, {Number(a.longitude).toFixed(4)} · Elev {a.elevation_ft_msl} ft</div>
-            </div>
-            {canManage && (
-              <div style={{ display: 'flex', gap: 8 }}>
-                {!a.is_active && <button onClick={() => handleSetActive(a.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', color: '#38bdf8', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Set Active</button>}
-                <button onClick={() => setConfirmDelete({ id: a.id, code: a.airport_code })} style={{ width: 32, height: 32, borderRadius: 7, border: 'none', background: '#ef444415', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={13} /></button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: '#f9fafb' }}>{a.airport_name || a.airport_code}</span>
+                  {a.is_active && <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(34,211,163,0.12)', color: G, border: '1px solid rgba(34,211,163,0.25)' }}>Active</span>}
+                </div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6 }}>{a.airport_code} · {Number(a.latitude).toFixed(4)}, {Number(a.longitude).toFixed(4)} · Elev {a.elevation_ft_msl} ft</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {dists.map(d => (
+                    <span key={d} style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: 'rgba(56,189,248,0.1)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.2)' }}>{d} nm</span>
+                  ))}
+                  {canManage && (
+                    <button onClick={() => setEditingDistances({ id: a.id, airport_code: a.airport_code, dists })}
+                      style={{ fontSize: 11, color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: 4, textDecoration: 'underline' }}>
+                      edit distances
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+              {canManage && (
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  {!a.is_active && <button onClick={() => handleSetActive(a.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', color: '#38bdf8', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Set Active</button>}
+                  <button onClick={() => setConfirmDelete({ id: a.id, code: a.airport_code })} style={{ width: 32, height: 32, borderRadius: 7, border: 'none', background: '#ef444415', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={13} /></button>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Overview map — always visible when airports exist */}

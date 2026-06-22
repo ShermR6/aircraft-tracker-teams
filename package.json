@@ -47,7 +47,14 @@
       "installerHeaderIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "FinalPing for Teams",
+      "menuCategory": "FinalPing"
     },
     "win": {
       "target": "nsis",

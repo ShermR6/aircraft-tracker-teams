@@ -34,13 +34,10 @@ const s = {
   emptyLog: { textAlign: 'center', padding: '24px', color: '#4b5563', fontSize: '13px' },
 };
 
-function formatTier(tier) {
-  if (!tier) return '—';
-  return tier.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-}
-
 function timeAgo(isoString) {
-  const diff = Date.now() - new Date(isoString).getTime();
+  const utc = isoString && !isoString.endsWith('Z') && !isoString.includes('+')
+    ? isoString + 'Z' : isoString;
+  const diff = Date.now() - new Date(utc).getTime();
   const mins = Math.floor(diff / 60000);
   const hours = Math.floor(mins / 60);
   const days = Math.floor(hours / 24);
@@ -83,23 +80,19 @@ export default function AccountDashboard() {
       setUser(userData);
       setAircraft(aircraftData || []);
 
-      // Set expiry from API response (most up to date)
       const expiryValue = userData?.expires_at || userData?.expiry_date || userData?.license_expires_at || userData?.expiry;
       if (expiryValue) setExpiresAt(new Date(expiryValue));
       else {
-        // Fallback to local storage
         const stored = await StorageService.getUserData();
         const storedExpiry = stored?.expires_at || stored?.expiry_date || stored?.license_expires_at;
         if (storedExpiry) setExpiresAt(new Date(storedExpiry));
       }
 
-      // Fetch live status (non-critical)
       try {
         const liveData = await APIService.getLiveAircraft();
         setLiveAircraft(liveData || []);
       } catch { /* silently skip */ }
 
-      // Load notifications and stats (non-critical)
       try {
         const [notifData, statsData] = await Promise.all([
           APIService.getRecentNotifications(8),
@@ -107,11 +100,7 @@ export default function AccountDashboard() {
         ]);
         setNotifications(notifData || []);
         setStats(statsData || null);
-      } catch {
-        // Silently skip if endpoints not available yet
-      }
-
-
+      } catch { /* silently skip */ }
 
     } catch (err) {
       console.error('Failed to load dashboard:', err);
@@ -132,7 +121,6 @@ export default function AccountDashboard() {
     ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : '—';
 
-  // Expiry warning
   let expiryWarning = null;
   if (expiresAt) {
     const msLeft = expiresAt - Date.now();
@@ -143,9 +131,10 @@ export default function AccountDashboard() {
     else if (daysLeft <= 7) expiryWarning = { label: `${daysLeft} day${daysLeft !== 1 ? 's' : ''}`, daysLeft, urgent: daysLeft <= 2 };
   }
 
+  const currentTier = user?.license_tier || 'starter';
+
   return (
     <div style={s.page}>
-      {/* Header */}
       <div style={{ ...s.header, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
           <h2 style={s.headerTitle}>Account Dashboard</h2>
@@ -159,7 +148,6 @@ export default function AccountDashboard() {
         </button>
       </div>
 
-      {/* Expiry warning banner */}
       {expiryWarning && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: '12px',
@@ -171,29 +159,23 @@ export default function AccountDashboard() {
           <p style={{ fontSize: '13px', color: expiryWarning.urgent ? '#fca5a5' : '#fcd34d', margin: 0, flex: 1 }}>
             {expiryWarning.expired
               ? 'Your license has expired. Renew to continue receiving alerts.'
-              : `Your license expires in ${expiryWarning.label}. Renew soon to avoid interruption.`
-            }
+              : `Your license expires in ${expiryWarning.label}. Renew soon to avoid interruption.`}
           </p>
           <span
             style={{ fontSize: '12px', fontWeight: '700', color: expiryWarning.urgent ? '#f87171' : '#fbbf24', cursor: 'pointer', whiteSpace: 'nowrap' }}
             onClick={() => window.electronAPI?.openExternal('https://finalpingapp.com/pricing')}
-          >
-            Renew →
-          </span>
+          >Renew →</span>
         </div>
       )}
 
-      {/* Top stats row */}
       <div style={s.grid3}>
         <div style={s.cardAccent(color)}>
           <div style={s.cardTop}>
             <div style={s.iconBox(color)}><Shield size={20} color={color} /></div>
-            <span style={s.badge(color)}>{user?.license_tier ? formatTier(user.license_tier) : 'Unknown'}</span>
+            <span style={s.badge(color)}>{currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</span>
           </div>
           <p style={s.cardLabel}>License Tier</p>
-          <p style={{ ...s.cardValue, color }}>
-            {user?.license_tier ? formatTier(user.license_tier) : '—'}
-          </p>
+          <p style={{ ...s.cardValue, color }}>{currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</p>
         </div>
 
         <div style={s.cardAccent('#38bdf8')}>
@@ -218,7 +200,6 @@ export default function AccountDashboard() {
         </div>
       </div>
 
-      {/* Alert stats + Account details */}
       <div style={s.grid2}>
         <div style={s.card}>
           <p style={s.sectionTitle}><Bell size={15} color="#9ca3af" />Alert Activity</p>
@@ -248,7 +229,7 @@ export default function AccountDashboard() {
           </div>
           <div style={s.row}>
             <span style={s.rowLabel}>License</span>
-            <span style={{ ...s.rowValue, color }}>{user?.license_tier ? formatTier(user.license_tier) : '—'}</span>
+            <span style={{ ...s.rowValue, color }}>{currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</span>
           </div>
           <div style={s.rowLast}>
             <span style={s.rowLabel}><Clock size={13} />Expires</span>
@@ -259,7 +240,6 @@ export default function AccountDashboard() {
           <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #1f2937' }}>
             <button
               onClick={handleBillingPortal}
-              disabled={false}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 padding: '10px', borderRadius: '10px', border: '1px solid #3b82f630',
@@ -277,7 +257,6 @@ export default function AccountDashboard() {
         </div>
       </div>
 
-      {/* Recent alerts + Aircraft list */}
       <div style={s.grid2}>
         <div style={s.card}>
           <p style={s.sectionTitle}><Bell size={15} color="#9ca3af" />Recent Alerts</p>
@@ -309,13 +288,15 @@ export default function AccountDashboard() {
           <p style={s.sectionTitle}><Plane size={15} color="#9ca3af" />Tracked Aircraft</p>
           {aircraft.length === 0 ? (
             <p style={{ color: '#6b7280', fontSize: '13px', marginTop: '8px' }}>
-              No aircraft added yet. Go to the Aircraft tab to add one.
+              No aircraft added yet. Go to the Team tab to add one.
             </p>
           ) : (
             aircraft.map((a, i) => {
               const live = liveAircraft.find(l => l.icao24 === a.icao24 || l.tail_number === a.tail_number);
-              const hasPosition = live && (live.latitude || live.distance_nm > 0);
-              const isOnGround = live && live.on_ground;
+              const lastSeenMs = live?.last_seen ? Date.now() - new Date(live.last_seen).getTime() : Infinity;
+              const isStale = lastSeenMs > 45000;
+              const hasPosition = live && !isStale && (live.latitude || live.distance_nm > 0);
+              const isOnGround = live && !isStale && live.on_ground;
               const isAirborne = hasPosition && !isOnGround;
               const dotColor = isAirborne ? '#34d399' : isOnGround ? '#f87171' : '#6b7280';
               const statusLabel = isAirborne ? 'Airborne' : isOnGround ? 'On Ground' : 'Not Detected';

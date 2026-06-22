@@ -1,65 +1,75 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ActivationScreen from './screens/ActivationScreen';
 import Dashboard from './screens/Dashboard';
 import StorageService from './services/storage';
 import APIService from './services/api';
+import { teamBackgroundTracker } from './services/teamBackgroundTracker';
 import './App.css';
 
-function UpdateBanner({ version, downloaded, onDismiss }) {
+function SplashScreen() {
   return (
     <div style={{
-      position: 'fixed',
-      top: 0, left: 0, right: 0,
-      zIndex: 9999,
-      background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-      padding: '10px 20px',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      gap: 16, fontSize: 13, fontWeight: 600, color: '#fff',
-      boxShadow: '0 2px 12px rgba(59,130,246,0.3)',
+      position: 'fixed', inset: 0, zIndex: 99999,
+      background: '#0b0b0b',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
     }}>
-      <span>
-        {downloaded
-          ? `✅ FinalPing v${version} is ready to install.`
-          : `⬇ Downloading FinalPing v${version}...`}
-      </span>
-      {downloaded && (
-        <>
-          <button
-            onClick={() => window.electronAPI?.openExternal('https://finalpingapp.com/changelog')}
-            style={{
-              padding: '5px 14px', borderRadius: 999,
-              background: 'rgba(255,255,255,0.15)', color: '#fff',
-              fontWeight: 600, fontSize: 12, border: '1px solid rgba(255,255,255,0.3)',
-              cursor: 'pointer', flexShrink: 0,
-            }}
-          >
-            What's new?
-          </button>
-          <button
-            onClick={() => window.electronAPI?.restartAndInstall()}
-            style={{
-              padding: '5px 14px', borderRadius: 999,
-              background: '#fff', color: '#3b82f6',
-              fontWeight: 700, fontSize: 12, border: 'none',
-              cursor: 'pointer', flexShrink: 0,
-            }}
-          >
-            Restart & Install
-          </button>
-        </>
-      )}
+      <style>{`
+        @keyframes splashIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(400%)} }
+      `}</style>
+      <div style={{ animation: 'splashIn 0.5s ease', textAlign: 'center' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#4b5563', marginBottom: 10 }}>
+          AIRCRAFT ALERTS
+        </div>
+        <div style={{ fontSize: 38, fontWeight: 800, color: '#f9fafb', letterSpacing: '-0.03em' }}>
+          FinalPing <span style={{ color: '#0ea5e9' }}>Teams</span>
+        </div>
+        <div style={{ width: 48, height: 2, background: 'linear-gradient(90deg, #0ea5e9, #6366f1)', borderRadius: 999, margin: '14px auto 0' }} />
+      </div>
+      <div style={{
+        position: 'absolute', bottom: 48,
+        width: 100, height: 2, background: '#1a1a1a', borderRadius: 999, overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, transparent, #0ea5e9, transparent)',
+          animation: 'shimmer 1.4s ease-in-out infinite',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function UpdateBanner({ version, onDismiss }) {
+  return (
+    <div style={{
+      position: 'fixed', bottom: 20, right: 20, zIndex: 9999,
+      background: '#1e293b', border: '1px solid rgba(14,165,233,0.3)',
+      borderRadius: 12, padding: '12px 16px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+      fontSize: 13, color: '#e2e8f0',
+    }}>
+      <span style={{ color: '#38bdf8', fontSize: 16 }}>↑</span>
+      <span>v{version} ready</span>
+      <button
+        onClick={() => window.electronAPI?.restartAndInstall()}
+        style={{
+          padding: '4px 12px', borderRadius: 6,
+          background: '#0ea5e9', border: 'none',
+          color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+        }}
+      >Restart</button>
       <button
         onClick={onDismiss}
         style={{
           background: 'none', border: 'none',
-          color: 'rgba(255,255,255,0.7)', fontSize: 18,
-          cursor: 'pointer', padding: '0 4px', lineHeight: 1, flexShrink: 0,
+          color: '#4b5563', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1,
         }}
-        title="Dismiss"
-      >
-        ✕
-      </button>
+      >✕</button>
     </div>
   );
 }
@@ -88,10 +98,9 @@ function LicenseExpiredOverlay({ onActivateNew }) {
           Your License Has Expired
         </h2>
         <p style={{ fontSize: 14, color: '#9ca3af', lineHeight: 1.7, margin: '0 0 28px 0' }}>
-          Your FinalPing license has expired. Aircraft tracking and alerts have been paused. Purchase a new license to restore full access — your new key will be emailed to you instantly.
+          Your FinalPing for Teams license has expired. Aircraft tracking and alerts have been paused. Purchase a new license to restore full access — your new key will be emailed to you instantly.
         </p>
 
-        {/* Primary — buy new license */}
         <button
           onClick={openPricing}
           style={{
@@ -105,7 +114,6 @@ function LicenseExpiredOverlay({ onActivateNew }) {
           Purchase New License →
         </button>
 
-        {/* Secondary — already have a new key */}
         <button
           onClick={onActivateNew}
           style={{
@@ -129,10 +137,10 @@ function LicenseExpiredOverlay({ onActivateNew }) {
 const CURRENT_VERSION = '1.0.0';
 
 const CHANGELOG = [
-  { type: 'new', text: 'New app icon with runway and radar design' },
-  { type: 'new', text: 'Formatting syntax guide in alert message editor' },
-  { type: 'improved', text: 'Help Center button added to the dashboard toolbar' },
-  { type: 'improved', text: 'macOS installer now available' },
+  { type: 'new', text: 'Live Map trail now records the full flight path in the background — switch to any tab and come back to see the complete route' },
+  { type: 'new', text: 'Live Map now shows airport runway diagram instead of a crosshair marker' },
+  { type: 'new', text: 'Dark map tiles on Live Map for better contrast with aircraft markers' },
+  { type: 'fix', text: 'Close button now fully quits the app instead of minimizing to tray' },
 ];
 
 const TAG = {
@@ -203,10 +211,21 @@ function ChangelogModal({ onClose }) {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
   const [updateVersion, setUpdateVersion] = useState(null);
-  const [updateDownloaded, setUpdateDownloaded] = useState(false);
   const [licenseExpired, setLicenseExpired] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  const inSplash = useRef(true);
+
+  useEffect(() => {
+    if (!loading) {
+      const minSplash = setTimeout(() => {
+        inSplash.current = false;
+        setShowSplash(false);
+      }, 2000);
+      return () => clearTimeout(minSplash);
+    }
+  }, [loading]);
 
   useEffect(() => {
     checkAuth().catch((err) => {
@@ -214,7 +233,6 @@ function App() {
       setLoading(false);
     });
 
-    // Show changelog modal if this is the first launch after an update
     StorageService.get('lastSeenVersion').then((seen) => {
       if (seen !== CURRENT_VERSION) {
         setShowChangelog(true);
@@ -222,14 +240,12 @@ function App() {
       }
     });
 
-    // Listen for auto-updater events from main process
-    window.electronAPI?.onUpdateAvailable((version) => {
-      setUpdateVersion(version);
-      setUpdateDownloaded(false);
-    });
     window.electronAPI?.onUpdateDownloaded((version) => {
-      setUpdateVersion(version);
-      setUpdateDownloaded(true);
+      if (inSplash.current) {
+        window.electronAPI?.restartAndInstall();
+      } else {
+        setUpdateVersion(version);
+      }
     });
   }, []);
 
@@ -247,14 +263,15 @@ function App() {
         }
         setIsAuthenticated(true);
         setLicenseExpired(false);
+        teamBackgroundTracker.start();
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       const detail = error.response?.data?.detail;
       if (detail === 'license_expired') {
-        // Keep them authenticated so they can see the app, just show overlay
         setIsAuthenticated(true);
         setLicenseExpired(true);
+        teamBackgroundTracker.start();
       } else {
         await StorageService.logout();
         setIsAuthenticated(false);
@@ -274,15 +291,15 @@ function App() {
     });
     APIService.setToken(authData.access_token);
     setIsAuthenticated(true);
-    // Restore input focus after React re-render
+    teamBackgroundTracker.start();
     setTimeout(() => window.electronAPI?.focusWindow?.(), 150);
   };
 
   const handleLogout = async () => {
+    teamBackgroundTracker.stop();
     await StorageService.logout();
     APIService.clearToken();
     setIsAuthenticated(false);
-    // Restore input focus after navigating to activation screen
     setTimeout(() => window.electronAPI?.focusWindow?.(), 150);
   };
 
@@ -296,6 +313,8 @@ function App() {
 
   return (
     <Router>
+      {showSplash && <SplashScreen />}
+      {updateVersion && <UpdateBanner version={updateVersion} onDismiss={() => setUpdateVersion(null)} />}
       {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
       {licenseExpired && (
         <LicenseExpiredOverlay
@@ -305,13 +324,6 @@ function App() {
             setIsAuthenticated(false);
             setLicenseExpired(false);
           }}
-        />
-      )}
-      {updateVersion && (
-        <UpdateBanner
-          version={updateVersion}
-          downloaded={updateDownloaded}
-          onDismiss={() => setUpdateVersion(null)}
         />
       )}
       <Routes>
