@@ -148,6 +148,12 @@ class APIService {
     return response.data;
   }
 
+  async loginWithGoogle(token, email) {
+    const response = await this.client.post('/api/auth/google-desktop', { token, email });
+    this.setToken(response.data.access_token);
+    return response.data;
+  }
+
   async getCurrentUser() {
     const response = await this.client.get('/api/user/me');
     return response.data;
