@@ -635,13 +635,14 @@ function ShiftModal({ shift, members, onClose, onSave }) {
 
         <div>
           <FieldLabel>Timezone</FieldLabel>
-          <select value={tz} onChange={e => setTz(e.target.value)} style={{ ...s.input, colorScheme: 'dark' }}>
+          <select value={tz} onChange={e => setTz(e.target.value)}
+            style={{ ...s.input, colorScheme: 'dark', background: '#0d1117', color: '#f9fafb' }}>
             {(Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : [
               'America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
               'America/Anchorage','Pacific/Honolulu','Europe/London','Europe/Paris','Europe/Berlin',
               'Europe/Moscow','Asia/Dubai','Asia/Kolkata','Asia/Tokyo','Asia/Shanghai',
               'Australia/Sydney','Pacific/Auckland','UTC',
-            ]).map(z => <option key={z} value={z}>{z.replace(/_/g,' ')}</option>)}
+            ]).map(z => <option key={z} value={z} style={{ background: '#0d1117', color: '#f9fafb' }}>{z.replace(/_/g,' ')}</option>)}
           </select>
         </div>
 
@@ -1457,10 +1458,15 @@ function AirportsTab({ myRole }) {
         </div>
       )}
 
-      <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #1a2030' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#38bdf8', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Airport Config</p>
-        <h2 style={{ fontSize: 26, fontWeight: 800, color: '#f9fafb', margin: '0 0 4px 0' }}>Team Airports</h2>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Configure destination airports the team is watching.</p>
+      <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #1a2030', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#38bdf8', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Airport Config</p>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: '#f9fafb', margin: '0 0 4px 0' }}>Team Airports</h2>
+          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Configure destination airports the team is watching.</p>
+        </div>
+        {canManage && !showAdd && (
+          <button onClick={() => setShowAdd(true)} style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>+ Add Airport</button>
+        )}
       </div>
 
       {msg && (
@@ -1497,8 +1503,8 @@ function AirportsTab({ myRole }) {
                   ))}
                   {canManage && (
                     <button onClick={() => setEditingDistances({ id: a.id, airport_code: a.airport_code, dists })}
-                      style={{ fontSize: 11, color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: 4, textDecoration: 'underline' }}>
-                      edit distances
+                      style={{ fontSize: 11, color: '#38bdf8', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', cursor: 'pointer', padding: '2px 10px', borderRadius: 6, fontWeight: 600 }}>
+                      Edit Distances
                     </button>
                   )}
                 </div>
@@ -1530,11 +1536,6 @@ function AirportsTab({ myRole }) {
           >Contact us</button>
           and we'll add it to the next update.
         </div>
-      )}
-
-      {/* Add form */}
-      {canManage && !showAdd && (
-        <button onClick={() => setShowAdd(true)} style={{ padding: '11px 20px', borderRadius: 10, background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>+ Add Airport</button>
       )}
 
       {canManage && showAdd && (
@@ -1712,10 +1713,30 @@ function ArrivalsTab({ arrivals, onRefresh, myRole }) {
 }
 
 // ── Tab: Alerts ───────────────────────────────────────────────────────────────
+const DEFAULT_ALERT_TYPES = [
+  { key: 'landing',  label: 'Landing',          desc: 'Aircraft lands at or near the airport', icon: '🛬', color: G },
+  { key: 'takeoff',  label: 'Takeoff',           desc: 'Aircraft departs from the airport',      icon: '🛫', color: A },
+  { key: '2nm',      label: '2 nm Alert',        desc: 'Aircraft within 2 nautical miles',        icon: '📡', color: '#38bdf8' },
+  { key: '5nm',      label: '5 nm Alert',        desc: 'Aircraft within 5 nautical miles',        icon: '📡', color: '#38bdf8' },
+  { key: '10nm',     label: '10 nm Alert',       desc: 'Aircraft within 10 nautical miles',       icon: '📡', color: '#38bdf8' },
+  { key: '15nm',     label: '15 nm Alert',       desc: 'Aircraft within 15 nautical miles',       icon: '📡', color: '#38bdf8' },
+  { key: '20nm',     label: '20 nm Alert',       desc: 'Aircraft within 20 nautical miles',       icon: '📡', color: '#38bdf8' },
+];
+const DEFAULT_TEMPLATES = {
+  landing:  '{tail_number} has landed at {airport}.',
+  takeoff:  '{tail_number} has departed from {airport}.',
+  '2nm':    '{tail_number} is 2 nm from {airport} at {altitude} ft.',
+  '5nm':    '{tail_number} is 5 nm from {airport} at {altitude} ft.',
+  '10nm':   '{tail_number} is 10 nm from {airport} at {altitude} ft.',
+  '15nm':   '{tail_number} is 15 nm from {airport} at {altitude} ft.',
+  '20nm':   '{tail_number} is 20 nm from {airport} at {altitude} ft.',
+};
+
 function AlertsTab() {
   const [settings, setSettings] = useState([]);
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
+  const [initing, setIniting] = useState(false);
 
   const load = useCallback(async () => {
     try { setSettings(await APIService.getTeamAlertSettings()); } catch { }
@@ -1723,9 +1744,9 @@ function AlertsTab() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleToggle = async (setting) => {
+  const handleToggle = async (alertType, currentEnabled, template) => {
     try {
-      await APIService.updateTeamAlertSetting(setting.alert_type, !setting.enabled, setting.message_template);
+      await APIService.updateTeamAlertSetting(alertType, !currentEnabled, template);
       load();
     } catch { }
   };
@@ -1737,42 +1758,79 @@ function AlertsTab() {
     } catch (e) { setError(e.response?.data?.detail || 'Failed'); }
   };
 
+  const handleInit = async () => {
+    setIniting(true);
+    try {
+      for (const t of DEFAULT_ALERT_TYPES) {
+        if (!settings.find(s => s.alert_type === t.key)) {
+          await APIService.updateTeamAlertSetting(t.key, true, DEFAULT_TEMPLATES[t.key]);
+        }
+      }
+      await load();
+    } catch { }
+    setIniting(false);
+  };
+
+  // Merge configured settings with default types for display
+  const rows = DEFAULT_ALERT_TYPES.map(def => {
+    const configured = settings.find(s => s.alert_type === def.key);
+    return { ...def, configured, enabled: configured?.enabled ?? false, template: configured?.message_template || DEFAULT_TEMPLATES[def.key] };
+  });
+
   return (
-    <div style={{ padding: 20 }}>
-      <div style={{ fontWeight: 700, fontSize: 15, color: '#f9fafb', marginBottom: 14 }}>Alert Templates</div>
-      <InlineError msg={error} />
-      {settings.length === 0 && <div style={{ color: '#4b5563', fontSize: 13 }}>No alert settings configured</div>}
-      {settings.map(setting => (
-        <div key={setting.id} style={{ ...s.card, padding: '14px 16px', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, color: '#f9fafb', textTransform: 'capitalize' }}>{setting.alert_type}</div>
-              <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>{setting.message_template?.slice(0, 60)}</div>
-            </div>
-            <button onClick={() => handleToggle(setting)} style={{
-              width: 44, height: 24, borderRadius: 12, cursor: 'pointer', border: 'none',
-              background: setting.enabled ? G : '#374151', transition: 'background 0.2s', position: 'relative',
-            }}>
-              <div style={{
-                width: 18, height: 18, borderRadius: '50%', background: '#fff',
-                position: 'absolute', top: 3, left: setting.enabled ? 23 : 3, transition: 'left 0.2s',
-              }} />
-            </button>
-            <button onClick={() => setEditing({ ...setting })} style={{ ...s.btn('ghost'), padding: '5px 8px' }}><Edit3 size={13} /></button>
-          </div>
+    <div style={{ padding: 24, maxWidth: 800 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#f9fafb', margin: '0 0 4px 0' }}>Alert Types</h2>
+          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Configure which events send notifications and customize message templates.</p>
         </div>
-      ))}
+        {settings.length === 0 && (
+          <button onClick={handleInit} disabled={initing}
+            style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg, #22d3a3, #0d9488)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: initing ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: initing ? 0.7 : 1 }}>
+            {initing ? 'Initializing…' : 'Initialize Defaults'}
+          </button>
+        )}
+      </div>
+      <InlineError msg={error} />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {rows.map(row => (
+          <div key={row.key} style={{ background: '#0f1319', border: `1px solid ${row.enabled ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, opacity: row.enabled ? 1 : 0.55 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 9, background: row.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
+              {row.icon}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb', marginBottom: 2 }}>{row.label}</div>
+              <div style={{ fontSize: 11, color: '#4b5563' }}>{row.configured ? (row.template.length > 60 ? row.template.slice(0, 60) + '…' : row.template) : row.desc}</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              {row.configured && (
+                <button onClick={() => setEditing({ alert_type: row.key, enabled: row.enabled, message_template: row.template })}
+                  style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: 'rgba(255,255,255,0.05)', color: '#9ca3af', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Edit3 size={13} />
+                </button>
+              )}
+              <div onClick={() => handleToggle(row.key, row.enabled, row.template)}
+                style={{ width: 44, height: 24, borderRadius: 12, background: row.enabled ? G : '#1e2a3a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', top: 3, left: row.enabled ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {editing && (
-        <Modal title={`Edit — ${editing.alert_type}`} onClose={() => setEditing(null)}>
-          <FieldLabel>Message Template</FieldLabel>
-          <textarea
-            value={editing.message_template}
-            onChange={e => setEditing(x => ({ ...x, message_template: e.target.value }))}
-            style={{ ...s.input, height: 100, resize: 'vertical', fontFamily: 'monospace' }}
-          />
-          <div style={{ fontSize: 11, color: '#4b5563', marginTop: 6 }}>
-            Variables: {'{tail_number}'} {'{airport}'} {'{altitude}'} {'{speed}'} {'{distance}'}
+        <Modal title={`Alert Template — ${editing.alert_type}`} onClose={() => setEditing(null)} width={500}>
+          <div style={{ marginBottom: 16 }}>
+            <FieldLabel>Message Template</FieldLabel>
+            <textarea
+              value={editing.message_template}
+              onChange={e => setEditing(x => ({ ...x, message_template: e.target.value }))}
+              style={{ ...s.input, height: 90, resize: 'vertical', fontFamily: 'monospace', fontSize: 12 }}
+            />
+            <div style={{ fontSize: 11, color: '#4b5563', marginTop: 6 }}>
+              Variables: <code style={{ color: '#38bdf8' }}>{'{tail_number}'}</code> <code style={{ color: '#38bdf8' }}>{'{airport}'}</code> <code style={{ color: '#38bdf8' }}>{'{altitude}'}</code> <code style={{ color: '#38bdf8' }}>{'{speed}'}</code> <code style={{ color: '#38bdf8' }}>{'{distance}'}</code>
+            </div>
           </div>
           <ModalActions onCancel={() => setEditing(null)} onConfirm={handleSaveTemplate} />
         </Modal>
