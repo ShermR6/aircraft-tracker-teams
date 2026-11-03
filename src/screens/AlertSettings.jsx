@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Loader, Plus, Trash2, Lock } from 'lucide-react';
 import APIService from '../services/api';
-import { getLimits } from '../config/tierLimits';
+import { getLimits, getLimitDisplay } from '../config/tierLimits';
 
 function Toggle({ checked, onChange }) {
   return (
@@ -105,7 +105,7 @@ export default function AlertSettings({ isViewOnly = false }) {
   const handleAddAlert = () => {
     const limits = getLimits(tier);
     if (alerts.length >= limits.zones) {
-      setMessage({ type: 'error', text: `Your ${tier} plan allows up to ${limits.zones} approach zones. Upgrade to add more.` });
+      setMessage({ type: 'error', text: `Your ${tier} plan allows up to ${getLimitDisplay(limits.zones)} approach zones. Upgrade to add more.` });
       return;
     }
     const newId = Math.max(...alerts.map(a => a.id), 0) + 1;
@@ -218,7 +218,7 @@ export default function AlertSettings({ isViewOnly = false }) {
 
       {/* Distance Alerts */}
       <div style={s.section}>
-        <span style={s.sectionLabel}>Distance Alerts — {alerts.length} / {getLimits(tier).zones} zones used</span>
+        <span style={s.sectionLabel}>Distance Alerts — {alerts.length} / {getLimitDisplay(getLimits(tier).zones)} zones used</span>
         {sortedAlerts.map((alert, index) => (
           <div key={alert.id} style={s.alertRow}>
             <div style={s.alertRowTop}>

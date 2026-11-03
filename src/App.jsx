@@ -296,29 +296,6 @@ function App() {
     setTimeout(() => window.electronAPI?.focusWindow?.(), 150);
   };
 
-  // Handle Google OAuth deep-link callback
-  useEffect(() => {
-    const handleOAuth = async ({ token, email, error }) => {
-      if (error || !token || !email) return;
-      try {
-        const data = await APIService.loginWithGoogle(token, email);
-        await StorageService.setToken(data.access_token);
-        await StorageService.setUserData({
-          user_id: data.user_id,
-          email: data.email,
-          display_name: data.display_name || null,
-          license_tier: data.license_tier,
-        });
-        setIsAuthenticated(true);
-        teamBackgroundTracker.start();
-        setTimeout(() => window.electronAPI?.focusWindow?.(), 150);
-      } catch (err) {
-        console.error('Google OAuth login failed:', err);
-      }
-    };
-    window.electronAPI?.onOAuthCallback?.(handleOAuth);
-    return () => window.electronAPI?.offOAuthCallback?.();
-  }, []);
 
   const handleLogout = async () => {
     teamBackgroundTracker.stop();
