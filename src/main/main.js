@@ -187,11 +187,18 @@ function createWindow() {
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 app.on('ready', () => {
-  // Enable launch at startup
-  app.setLoginItemSettings({
-    openAtLogin: true,
-    openAsHidden: true, // start minimized to tray on login
-  });
+  // Launch at startup is on by default, but applied only once. Re-applying it on
+  // every ready rewrote the Run key and undid the user turning startup off in
+  // Windows, which looked like the update switching it back on (an update
+  // relaunches the app, so that is when it showed up).
+  const loginItem = app.getLoginItemSettings();
+  if (!store.get('loginItemDefaultApplied') && !loginItem.openAtLogin) {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      openAsHidden: true, // start minimized to tray on login
+    });
+  }
+  store.set('loginItemDefaultApplied', true);
 
   createWindow();
   createTray();
@@ -240,7 +247,9 @@ ipcMain.handle('focus-window', () => {
 // ─── Auto-updater IPC ─────────────────────────────────────────────────────────
 ipcMain.handle('update-restart', () => {
   forceQuit = true;
-  if (autoUpdater) autoUpdater.quitAndInstall();
+  // (true, true) = install silently, then relaunch. electron-updater defaults
+  // isSilent to false, which runs the NSIS wizard instead of updating in place.
+  if (autoUpdater) autoUpdater.quitAndInstall(true, true);
 });
 
 ipcMain.handle('get-app-version', () => app.getVersion());

@@ -1,6 +1,6 @@
 {
   "name": "finalpingapp-teams",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "FinalPing for Teams - Real-time aircraft tracking and alerts for teams",
   "author": "FinalPing",
   "homepage": ".",
@@ -84,6 +84,7 @@
     "electron-updater": "^6.1.7",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.294.0",
+    "motion": "^12.41.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0"
