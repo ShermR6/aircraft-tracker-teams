@@ -47,10 +47,10 @@ function searchAirports(query) {
 }
 
 // ── Design tokens (green/amber — ops center feel) ────────────────────────────
-const G = '#22d3a3';   // primary green
-const A = '#f59e0b';   // amber accent
-const BG = '#0a0d12';
-const CARD = '#0f1319';
+const G = 'var(--good)';   // primary green
+const A = 'var(--warn)';   // amber accent
+const BG = 'var(--bg)';
+const CARD = 'var(--bg)';
 const BORDER = 'rgba(255,255,255,0.08)';
 
 const TABS = [
@@ -70,19 +70,19 @@ const TABS = [
 const ROLE_STYLES = {
   owner: { bg: 'rgba(245,158,11,0.15)', color: A, label: 'Owner' },
   admin: { bg: 'rgba(34,211,163,0.12)', color: G, label: 'Admin' },
-  member: { bg: 'rgba(107,114,128,0.1)', color: '#9ca3af', label: 'Member' },
+  member: { bg: 'rgba(107,114,128,0.1)', color: 'var(--muted)', label: 'Member' },
 };
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const CHANNEL_TYPES = [
-  { key: 'sms',         label: 'SMS',          Icon: Phone,  color: '#22d3a3', desc: 'Text message alerts to any phone number' },
+  { key: 'sms',         label: 'SMS',          Icon: Phone,  color: 'var(--good)', desc: 'Text message alerts to any phone number' },
   { key: 'discord',     label: 'Discord',      Icon: Hash,   color: '#5865F2', desc: 'Send alerts to a Discord channel via webhook' },
   { key: 'slack',       label: 'Slack',        Icon: Hash,   color: '#4A154B', desc: 'Post alerts to a Slack channel via webhook' },
-  { key: 'email',       label: 'Email',        Icon: Mail,   color: '#f59e0b', desc: 'Send alert emails to any address' },
+  { key: 'email',       label: 'Email',        Icon: Mail,   color: 'var(--warn)', desc: 'Send alert emails to any address' },
   { key: 'teams',       label: 'MS Teams',     Icon: Users,  color: '#6264A7', desc: 'Send alerts to a Microsoft Teams channel' },
   { key: 'telegram',    label: 'Telegram',     Icon: Globe,  color: '#26A5E4', desc: 'Send alerts to a Telegram bot or channel' },
   { key: 'google_chat', label: 'Google Chat',  Icon: Globe,  color: '#1a73e8', desc: 'Post alerts to a Google Chat space' },
-  { key: 'webhook',     label: 'Webhook',      Icon: GitBranch, color: '#6b7280', desc: 'POST alert data to any custom HTTP endpoint' },
+  { key: 'webhook',     label: 'Webhook',      Icon: GitBranch, color: 'var(--muted)', desc: 'POST alert data to any custom HTTP endpoint' },
 ];
 
 const CHANNEL_META = {
@@ -105,11 +105,11 @@ const s = {
     width: '100%', padding: '9px 12px',
     background: 'rgba(255,255,255,0.04)',
     border: `1px solid ${BORDER}`,
-    borderRadius: 8, color: '#f9fafb', fontSize: 13,
+    borderRadius: 8, color: 'var(--text)', fontSize: 13,
     outline: 'none', boxSizing: 'border-box',
   },
   label: {
-    fontSize: 11, fontWeight: 600, color: '#6b7280',
+    fontSize: 11, fontWeight: 600, color: 'var(--muted)',
     textTransform: 'uppercase', letterSpacing: '0.08em',
     display: 'block', marginBottom: 6,
   },
@@ -117,17 +117,17 @@ const s = {
     padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13,
     fontWeight: 600, border: 'none',
     background: variant === 'primary'
-      ? `linear-gradient(135deg, ${G}, #16a37a)`
+      ? `linear-gradient(135deg, ${G}, var(--good))`
       : variant === 'danger'
       ? 'rgba(239,68,68,0.12)'
       : 'rgba(255,255,255,0.06)',
-    color: variant === 'primary' ? '#0a0d12'
-      : variant === 'danger' ? '#ef4444'
-      : '#d1d5db',
+    color: variant === 'primary' ? 'var(--bg)'
+      : variant === 'danger' ? 'var(--bad)'
+      : 'var(--muted)',
   }),
   greenDot: { width: 8, height: 8, borderRadius: '50%', background: G, display: 'inline-block' },
   amberDot: { width: 8, height: 8, borderRadius: '50%', background: A, display: 'inline-block' },
-  grayDot: { width: 8, height: 8, borderRadius: '50%', background: '#4b5563', display: 'inline-block' },
+  grayDot: { width: 8, height: 8, borderRadius: '50%', background: 'var(--faint)', display: 'inline-block' },
 };
 
 function Avatar({ email, size = 34 }) {
@@ -152,13 +152,13 @@ function Modal({ title, onClose, children, width = 420 }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div style={{
-        background: '#0f1319', border: `1px solid ${BORDER}`,
+        background: 'var(--bg)', border: `1px solid ${BORDER}`,
         borderRadius: 16, padding: 28, width, maxWidth: '92%',
         boxShadow: '0 24px 80px rgba(0,0,0,0.6)', maxHeight: '85vh', overflowY: 'auto',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: '#f9fafb' }}>{title}</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: 4 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{title}</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: 4 }}>
             <X size={16} />
           </button>
         </div>
@@ -189,7 +189,7 @@ function Spinner() {
 
 function InlineError({ msg }) {
   if (!msg) return null;
-  return <div style={{ color: '#ef4444', fontSize: 12, marginTop: 8, background: 'rgba(239,68,68,0.08)', padding: '8px 12px', borderRadius: 8 }}>{msg}</div>;
+  return <div style={{ color: 'var(--bad)', fontSize: 12, marginTop: 8, background: 'rgba(239,68,68,0.08)', padding: '8px 12px', borderRadius: 8 }}>{msg}</div>;
 }
 
 function Badge({ color, children }) {
@@ -210,26 +210,26 @@ function OpsStatusBar({ onDuty = [], liveAircraft = [], claims = [], arrivals = 
       padding: '10px 20px',
       background: 'rgba(34,211,163,0.05)',
       borderBottom: `1px solid rgba(34,211,163,0.12)`,
-      fontSize: 12, color: '#d1d5db', flexShrink: 0,
+      fontSize: 12, color: 'var(--muted)', flexShrink: 0,
     }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={s.greenDot} />
         <strong style={{ color: G }}>{onDuty.filter(m => m.on_duty).length}</strong> on duty
       </span>
-      <span style={{ color: '#374151' }}>·</span>
+      <span style={{ color: 'var(--border)' }}>·</span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <Plane size={12} color={G} />
         <strong style={{ color: G }}>{inRange}</strong> in range
       </span>
-      <span style={{ color: '#374151' }}>·</span>
+      <span style={{ color: 'var(--border)' }}>·</span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <UserCheck size={12} color={claimCount > 0 ? A : '#6b7280'} />
-        <strong style={{ color: claimCount > 0 ? A : '#6b7280' }}>{claimCount}</strong> claimed
+        <UserCheck size={12} color={claimCount > 0 ? A : 'var(--muted)'} />
+        <strong style={{ color: claimCount > 0 ? A : 'var(--muted)' }}>{claimCount}</strong> claimed
       </span>
-      <span style={{ color: '#374151' }}>·</span>
+      <span style={{ color: 'var(--border)' }}>·</span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <Clock size={12} color={upcomingArrivals > 0 ? A : '#6b7280'} />
-        <strong style={{ color: upcomingArrivals > 0 ? A : '#6b7280' }}>{upcomingArrivals}</strong> expected
+        <Clock size={12} color={upcomingArrivals > 0 ? A : 'var(--muted)'} />
+        <strong style={{ color: upcomingArrivals > 0 ? A : 'var(--muted)' }}>{upcomingArrivals}</strong> expected
       </span>
     </div>
   );
@@ -254,11 +254,11 @@ function OpsTab({ team, onDuty, liveAircraft, claims, arrivals, activity, onClai
     <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* On duty */}
       <section>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
           On Duty Now
         </div>
         {onDutyNow.length === 0 ? (
-          <div style={{ color: '#4b5563', fontSize: 13 }}>Nobody currently on duty — all channels active</div>
+          <div style={{ color: 'var(--faint)', fontSize: 13 }}>Nobody currently on duty — all channels active</div>
         ) : (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {onDutyNow.map(m => (
@@ -267,7 +267,7 @@ function OpsTab({ team, onDuty, liveAircraft, claims, arrivals, activity, onClai
                   <Avatar email={m.email} size={36} />
                   <span style={{ ...s.greenDot, position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, border: '2px solid ' + CARD }} />
                 </div>
-                <span style={{ fontSize: 13, color: '#d1d5db' }}>{m.display_name || m.email.split('@')[0]}</span>
+                <span style={{ fontSize: 13, color: 'var(--muted)' }}>{m.display_name || m.email.split('@')[0]}</span>
               </div>
             ))}
           </div>
@@ -276,11 +276,11 @@ function OpsTab({ team, onDuty, liveAircraft, claims, arrivals, activity, onClai
 
       {/* Aircraft in range */}
       <section>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
           Aircraft In Range
         </div>
         {inRange.length === 0 ? (
-          <div style={{ color: '#4b5563', fontSize: 13 }}>No aircraft currently in airspace</div>
+          <div style={{ color: 'var(--faint)', fontSize: 13 }}>No aircraft currently in airspace</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {inRange.map(a => {
@@ -289,8 +289,8 @@ function OpsTab({ team, onDuty, liveAircraft, claims, arrivals, activity, onClai
                 <div key={a.icao24} style={{ ...s.card, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Plane size={16} color={G} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: '#f9fafb' }}>{a.tail_number}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{a.tail_number}</div>
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>
                       {a.distance_nm?.toFixed(1)}nm · {a.altitude_ft_agl ? Math.round(a.altitude_ft_agl) + 'ft AGL' : 'On ground'}
                       {claim && <span style={{ color: A, marginLeft: 8 }}>✋ {claim.claimed_by_email?.split('@')[0]}</span>}
                     </div>
@@ -309,7 +309,7 @@ function OpsTab({ team, onDuty, liveAircraft, claims, arrivals, activity, onClai
       {/* Upcoming arrivals */}
       {upcoming.length > 0 && (
         <section>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
             Expected Arrivals
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -317,8 +317,8 @@ function OpsTab({ team, onDuty, liveAircraft, claims, arrivals, activity, onClai
               <div key={a.id} style={{ ...s.card, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Clock size={15} color={A} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#f9fafb' }}>{a.tail_number}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>{a.notes || 'No notes'}</div>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>{a.tail_number}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>{a.notes || 'No notes'}</div>
                 </div>
                 <Badge color={A}>{etaCountdown(a.expected_at)}</Badge>
               </div>
@@ -330,16 +330,16 @@ function OpsTab({ team, onDuty, liveAircraft, claims, arrivals, activity, onClai
       {/* Unacknowledged alerts */}
       {unacked.length > 0 && (
         <section>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bad)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
             Pending Acknowledgement ({unacked.length})
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {unacked.slice(0, 5).map(log => (
               <div key={log.id} style={{ ...s.card, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, borderColor: 'rgba(239,68,68,0.15)' }}>
-                <AlertTriangle size={14} color='#ef4444' />
+                <AlertTriangle size={14} color='var(--bad)' />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: '#f9fafb' }}>{log.aircraft_tail} — {log.alert_type}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>{log.message?.slice(0, 60)}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text)' }}>{log.aircraft_tail} — {log.alert_type}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)' }}>{log.message?.slice(0, 60)}</div>
                 </div>
                 <button onClick={() => onAck(log.id)} style={{ ...s.btn('primary'), fontSize: 12, padding: '6px 12px' }}>Ack</button>
               </div>
@@ -401,7 +401,7 @@ function MembersTab({ team, myRole, onDuty, onRefresh }) {
   return (
     <div style={{ padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: '#f9fafb' }}>Team Members ({members.length})</span>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Team Members ({members.length})</span>
         {canManage && <button onClick={() => setShowInviteModal(true)} style={s.btn('primary')}>+ Create Invite Link</button>}
       </div>
       <InlineError msg={error} />
@@ -417,10 +417,10 @@ function MembersTab({ team, myRole, onDuty, onRefresh }) {
                 <span style={{ ...(onDutyNow ? s.greenDot : s.grayDot), position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, border: '2px solid ' + CARD }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#f9fafb' }}>{m.display_name || m.email.split('@')[0]}</div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginTop: 1 }}>{m.email}</div>
-                <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>
-                  {m.custom_role_name ? <Badge color={m.custom_role_color || '#9ca3af'}>{m.custom_role_name}</Badge> : <Badge color={rs.color}>{rs.label}</Badge>}
+                <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>{m.display_name || m.email.split('@')[0]}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{m.email}</div>
+                <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2 }}>
+                  {m.custom_role_name ? <Badge color={m.custom_role_color || 'var(--muted)'}>{m.custom_role_name}</Badge> : <Badge color={rs.color}>{rs.label}</Badge>}
                   {onDutyNow && <span style={{ marginLeft: 8, color: G, fontSize: 11 }}>● On Duty</span>}
                 </div>
               </div>
@@ -444,14 +444,14 @@ function MembersTab({ team, myRole, onDuty, onRefresh }) {
       {/* Pending invite tokens */}
       {inviteTokens.length > 0 && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
             Pending Invite Links
           </div>
           {inviteTokens.map(t => (
             <div key={t.id} style={{ ...s.card, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'monospace', fontSize: 12, color: '#9ca3af' }}>{t.token.slice(0, 12)}…</div>
-                <div style={{ fontSize: 11, color: '#4b5563' }}>{t.note || 'No note'}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--muted)' }}>{t.token.slice(0, 12)}…</div>
+                <div style={{ fontSize: 11, color: 'var(--faint)' }}>{t.note || 'No note'}</div>
               </div>
               <button onClick={() => copyInviteLink(t)} style={{ ...s.btn('ghost'), fontSize: 12, padding: '5px 10px', display: 'flex', gap: 5 }}>
                 <Copy size={13} /> Copy
@@ -506,7 +506,7 @@ function ScheduleTab({ team, onDuty }) {
             {onDutyNow.map(m => (
               <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Avatar email={m.email} size={30} />
-                <span style={{ fontSize: 12, color: '#d1d5db' }}>{m.display_name || m.email.split('@')[0]}</span>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>{m.display_name || m.email.split('@')[0]}</span>
               </div>
             ))}
           </div>
@@ -514,18 +514,18 @@ function ScheduleTab({ team, onDuty }) {
       )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: '#f9fafb' }}>Shifts</span>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Shifts</span>
         <button onClick={() => { setEditShift(null); setShowModal(true); }} style={s.btn('primary')}>+ Add Shift</button>
       </div>
       <InlineError msg={error} />
 
       {shifts.length === 0 ? (
-        <div style={{ color: '#4b5563', fontSize: 13, textAlign: 'center', paddingTop: 30 }}>No shifts configured yet</div>
+        <div style={{ color: 'var(--faint)', fontSize: 13, textAlign: 'center', paddingTop: 30 }}>No shifts configured yet</div>
       ) : shifts.map(shift => (
         <div key={shift.id} style={{ ...s.card, padding: '14px 18px', marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <div style={{ width: 12, height: 12, borderRadius: '50%', background: shift.color || G, flexShrink: 0 }} />
-            <span style={{ fontWeight: 700, fontSize: 14, color: '#f9fafb', flex: 1 }}>{shift.name}</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', flex: 1 }}>{shift.name}</span>
             <button onClick={() => { setEditShift(shift); setShowModal(true); }} style={{ ...s.btn('ghost'), padding: '4px 8px' }}><Edit3 size={13} /></button>
             <button onClick={() => handleDelete(shift.id)} style={{ ...s.btn('danger'), padding: '4px 8px' }}><Trash2 size={13} /></button>
           </div>
@@ -537,17 +537,17 @@ function ScheduleTab({ team, onDuty }) {
                 {shift.end_date ? new Date(shift.end_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Ongoing'}
               </span>
             ) : (
-              <span style={{ fontSize: 12, color: '#6b7280' }}>Recurring</span>
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>Recurring</span>
             )}
-            <span style={{ fontSize: 12, color: '#6b7280' }}>{shift.start_time}–{shift.end_time}</span>
-            {shift.timezone && <span style={{ fontSize: 11, color: '#4b5563' }}>{shift.timezone}</span>}
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{shift.start_time}–{shift.end_time}</span>
+            {shift.timezone && <span style={{ fontSize: 11, color: 'var(--faint)' }}>{shift.timezone}</span>}
           </div>
           {shift.members?.length > 0 && (
             <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
               {shift.members.map(m => (
                 <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Avatar email={m.email} size={22} />
-                  <span style={{ fontSize: 11, color: '#9ca3af' }}>{m.display_name || m.email.split('@')[0]}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{m.display_name || m.email.split('@')[0]}</span>
                 </div>
               ))}
             </div>
@@ -609,16 +609,16 @@ function ShiftModal({ shift, members, onClose, onSave }) {
           <FieldLabel>Date Range</FieldLabel>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ ...s.input, colorScheme: 'dark', flex: 1 }} />
-            <span style={{ color: '#4b5563', fontSize: 13, flexShrink: 0 }}>→</span>
+            <span style={{ color: 'var(--faint)', fontSize: 13, flexShrink: 0 }}>→</span>
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={startDate || undefined} style={{ ...s.input, colorScheme: 'dark', flex: 1 }} />
           </div>
           {startDate && endDate && (
-            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 5 }}>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 5 }}>
               {fmtDate(startDate)} – {fmtDate(endDate)}
             </div>
           )}
           {(!startDate || !endDate) && (
-            <div style={{ fontSize: 11, color: '#4b5563', marginTop: 5 }}>Leave blank for a recurring shift with no end date</div>
+            <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 5 }}>Leave blank for a recurring shift with no end date</div>
           )}
         </div>
 
@@ -636,13 +636,13 @@ function ShiftModal({ shift, members, onClose, onSave }) {
         <div>
           <FieldLabel>Timezone</FieldLabel>
           <select value={tz} onChange={e => setTz(e.target.value)}
-            style={{ ...s.input, colorScheme: 'dark', background: '#0d1117', color: '#f9fafb' }}>
+            style={{ ...s.input, colorScheme: 'dark', background: 'var(--bg)', color: 'var(--text)' }}>
             {(Intl.supportedValuesOf ? Intl.supportedValuesOf('timeZone') : [
               'America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
               'America/Anchorage','Pacific/Honolulu','Europe/London','Europe/Paris','Europe/Berlin',
               'Europe/Moscow','Asia/Dubai','Asia/Kolkata','Asia/Tokyo','Asia/Shanghai',
               'Australia/Sydney','Pacific/Auckland','UTC',
-            ]).map(z => <option key={z} value={z} style={{ background: '#0d1117', color: '#f9fafb' }}>{z.replace(/_/g,' ')}</option>)}
+            ]).map(z => <option key={z} value={z} style={{ background: 'var(--bg)', color: 'var(--text)' }}>{z.replace(/_/g,' ')}</option>)}
           </select>
         </div>
 
@@ -658,8 +658,8 @@ function ShiftModal({ shift, members, onClose, onSave }) {
               <label key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                 <input type="checkbox" checked={userIds.includes(m.user_id)} onChange={() => toggleMember(m.user_id)} />
                 <Avatar email={m.email} size={24} />
-                <span style={{ fontSize: 13, color: '#d1d5db' }}>{m.name || m.display_name || m.email.split('@')[0]}</span>
-                <span style={{ fontSize: 11, color: '#4b5563' }}>{m.email}</span>
+                <span style={{ fontSize: 13, color: 'var(--muted)' }}>{m.name || m.display_name || m.email.split('@')[0]}</span>
+                <span style={{ fontSize: 11, color: 'var(--faint)' }}>{m.email}</span>
               </label>
             ))}
           </div>
@@ -702,8 +702,8 @@ function ChannelsTab({ team, onRefresh }) {
   return (
     <div style={{ padding: 24, maxWidth: 860 }}>
       <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: '#f9fafb', margin: '0 0 4px 0' }}>Notification Channels</h2>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Connect your preferred services to receive real-time aircraft alerts.</p>
+        <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 4px 0' }}>Notification Channels</h2>
+        <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>Connect your preferred services to receive real-time aircraft alerts.</p>
       </div>
       <InlineError msg={error} />
 
@@ -712,7 +712,7 @@ function ChannelsTab({ team, onRefresh }) {
         {CHANNEL_TYPES.map(({ key, label: lbl, Icon, color, desc }) => {
           const configured = channels.filter(c => c.integration_type === key);
           return (
-            <div key={key} style={{ background: '#0f1319', border: `1px solid rgba(255,255,255,0.07)`, borderRadius: 12, padding: '16px 16px 14px', cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s' }}
+            <div key={key} style={{ background: 'var(--bg)', border: `1px solid rgba(255,255,255,0.07)`, borderRadius: 12, padding: '16px 16px 14px', cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = color + '55'; e.currentTarget.style.boxShadow = `0 0 0 1px ${color}22`; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.boxShadow = 'none'; }}
               onClick={() => { setShowAdd(key); setLabel(''); setValue(''); setError(''); }}>
@@ -721,13 +721,13 @@ function ChannelsTab({ team, onRefresh }) {
                   <Icon size={18} color={color} />
                 </div>
                 {configured.length > 0 && (
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#22d3a322', color: G, border: '1px solid #22d3a344' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--good)22', color: G, border: '1px solid var(--good)44' }}>
                     {configured.length} active
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb', marginBottom: 4 }}>{lbl}</div>
-              <div style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.5 }}>{desc}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{lbl}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.5 }}>{desc}</div>
             </div>
           );
         })}
@@ -736,27 +736,27 @@ function ChannelsTab({ team, onRefresh }) {
       {/* Active channels list */}
       {channels.length > 0 && (
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Active Channels ({channels.length})</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--faint)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Active Channels ({channels.length})</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {channels.map(ch => {
               const ct = CHANNEL_TYPES.find(t => t.key === ch.integration_type);
               const Icon = ct?.Icon || Globe;
-              const color = ct?.color || '#6b7280';
+              const color = ct?.color || 'var(--muted)';
               return (
-                <div key={ch.id} style={{ background: '#131b27', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div key={ch.id} style={{ background: 'var(--panel)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 9, background: color + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Icon size={16} color={color} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb' }}>{ch.label}</div>
-                    <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{ch.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {ct?.label} · {ch.value.length > 40 ? ch.value.slice(0, 40) + '…' : ch.value}
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: G, boxShadow: `0 0 6px ${G}` }} />
                     <button onClick={() => handleRemove(ch.id)} disabled={removing === ch.id}
-                      style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: removing === ch.id ? 'transparent' : '#ef444415', color: '#ef4444', cursor: removing === ch.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: removing === ch.id ? 0.5 : 1 }}>
+                      style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: removing === ch.id ? 'transparent' : 'var(--bad-bg)', color: 'var(--bad)', cursor: removing === ch.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: removing === ch.id ? 0.5 : 1 }}>
                       <Trash2 size={13} />
                     </button>
                   </div>
@@ -768,12 +768,12 @@ function ChannelsTab({ team, onRefresh }) {
       )}
 
       {channels.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '32px 20px', background: '#0f1319', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.08)' }}>
+        <div style={{ textAlign: 'center', padding: '32px 20px', background: 'var(--bg)', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.08)' }}>
           <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(34,211,163,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
             <Radio size={22} color={G} />
           </div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#f9fafb', marginBottom: 6 }}>No channels yet</div>
-          <div style={{ fontSize: 13, color: '#4b5563' }}>Click any integration above to add your first channel.</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>No channels yet</div>
+          <div style={{ fontSize: 13, color: 'var(--faint)' }}>Click any integration above to add your first channel.</div>
         </div>
       )}
 
@@ -781,13 +781,13 @@ function ChannelsTab({ team, onRefresh }) {
         <Modal title={`Connect ${typeMeta?.label}`} onClose={() => setShowAdd(null)} width={460}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Integration icon + desc */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', background: (typeMeta?.color || '#6b7280') + '12', borderRadius: 10, border: `1px solid ${typeMeta?.color || '#6b7280'}22` }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: (typeMeta?.color || '#6b7280') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', background: (typeMeta?.color || 'var(--muted)') + '12', borderRadius: 10, border: `1px solid ${typeMeta?.color || 'var(--muted)'}22` }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: (typeMeta?.color || 'var(--muted)') + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 {typeMeta && <typeMeta.Icon size={20} color={typeMeta.color} />}
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb' }}>{typeMeta?.label}</div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{typeMeta?.desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{typeMeta?.label}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{typeMeta?.desc}</div>
               </div>
             </div>
             <div>
@@ -797,7 +797,7 @@ function ChannelsTab({ team, onRefresh }) {
             <div>
               <FieldLabel>{meta?.valueLabel || 'Value'}</FieldLabel>
               <input value={value} onChange={e => setValue(e.target.value)} placeholder={meta?.valuePlaceholder || ''} style={s.input} />
-              {meta?.hint && <div style={{ fontSize: 11, color: '#4b5563', marginTop: 5 }}>{meta.hint}</div>}
+              {meta?.hint && <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 5 }}>{meta.hint}</div>}
             </div>
             <InlineError msg={error} />
             <ModalActions onCancel={() => setShowAdd(null)} onConfirm={handleAdd} disabled={!label.trim() || !value.trim()} />
@@ -845,7 +845,7 @@ function RoutingTab({ team, onRefresh }) {
   return (
     <div style={{ padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: '#f9fafb' }}>Alert Routing</span>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Alert Routing</span>
         <button onClick={handleSave} disabled={saving} style={s.btn('primary')}>
           {saving ? 'Saving…' : 'Save Changes'}
         </button>
@@ -853,14 +853,14 @@ function RoutingTab({ team, onRefresh }) {
       <InlineError msg={error} />
 
       {channels.length === 0 ? (
-        <div style={{ color: '#4b5563', fontSize: 13 }}>Add channels first to configure routing</div>
+        <div style={{ color: 'var(--faint)', fontSize: 13 }}>Add channels first to configure routing</div>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: 11, color: '#6b7280', fontWeight: 600, textTransform: 'uppercase' }}>Alert</th>
+              <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: 11, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase' }}>Alert</th>
               {channels.map(ch => (
-                <th key={ch.id} style={{ textAlign: 'center', padding: '8px 8px', fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                <th key={ch.id} style={{ textAlign: 'center', padding: '8px 8px', fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>
                   {ch.label.slice(0, 12)}
                 </th>
               ))}
@@ -869,7 +869,7 @@ function RoutingTab({ team, onRefresh }) {
           <tbody>
             {alertTypes.map(at => (
               <tr key={at} style={{ borderTop: `1px solid ${BORDER}` }}>
-                <td style={{ padding: '10px 12px', fontSize: 13, color: '#d1d5db', textTransform: 'capitalize' }}>{at}</td>
+                <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--muted)', textTransform: 'capitalize' }}>{at}</td>
                 {channels.map(ch => {
                   const disabled = (routing[at] || []).includes(ch.id);
                   return (
@@ -895,37 +895,37 @@ function RoutingTab({ team, onRefresh }) {
         <div style={{ marginTop: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
             <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <AlertTriangle size={14} color="#f87171" />
+              <AlertTriangle size={14} color="var(--bad)" />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb' }}>Alert Escalation</div>
-              <div style={{ fontSize: 11, color: '#4b5563' }}>Automatically re-notify if an alert is not acknowledged</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Alert Escalation</div>
+              <div style={{ fontSize: 11, color: 'var(--faint)' }}>Automatically re-notify if an alert is not acknowledged</div>
             </div>
           </div>
-          <div style={{ background: '#0f1319', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
             {/* Toggle row */}
             <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: escalation.enabled ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#f9fafb' }}>Enable escalation</div>
-                <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>Re-alert team members when alerts go unacknowledged</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Enable escalation</div>
+                <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2 }}>Re-alert team members when alerts go unacknowledged</div>
               </div>
               <div onClick={() => setEscalation(x => ({ ...x, enabled: !x.enabled }))}
-                style={{ width: 44, height: 24, borderRadius: 12, background: escalation.enabled ? G : '#1e2a3a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                style={{ width: 44, height: 24, borderRadius: 12, background: escalation.enabled ? G : 'var(--panel-2)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
                 <div style={{ position: 'absolute', top: 3, left: escalation.enabled ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }} />
               </div>
             </div>
             {escalation.enabled && (
               <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {/* Level 1 */}
-                <div style={{ background: '#131b27', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Level 1 — First Escalation</div>
+                <div style={{ background: 'var(--panel)', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Level 1 — First Escalation</div>
                   <div style={{ display: 'flex', gap: 12 }}>
                     <div style={{ flex: 1 }}>
                       <FieldLabel>Escalate after</FieldLabel>
                       <div style={{ position: 'relative' }}>
                         <input type="number" value={escalation.first_escalation_minutes} min={1}
                           onChange={e => setEscalation(x => ({ ...x, first_escalation_minutes: +e.target.value }))} style={s.input} />
-                        <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#4b5563' }}>min</span>
+                        <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'var(--faint)' }}>min</span>
                       </div>
                     </div>
                     <div style={{ flex: 1 }}>
@@ -941,15 +941,15 @@ function RoutingTab({ team, onRefresh }) {
                   </div>
                 </div>
                 {/* Level 2 */}
-                <div style={{ background: '#131b27', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#f87171', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Level 2 — Critical Escalation</div>
+                <div style={{ background: 'var(--panel)', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--bad)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Level 2 — Critical Escalation</div>
                   <div style={{ display: 'flex', gap: 12 }}>
                     <div style={{ flex: 1 }}>
                       <FieldLabel>Escalate after</FieldLabel>
                       <div style={{ position: 'relative' }}>
                         <input type="number" value={escalation.second_escalation_minutes} min={1}
                           onChange={e => setEscalation(x => ({ ...x, second_escalation_minutes: +e.target.value }))} style={s.input} />
-                        <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#4b5563' }}>min</span>
+                        <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'var(--faint)' }}>min</span>
                       </div>
                     </div>
                     <div style={{ flex: 1 }}>
@@ -1062,23 +1062,23 @@ function AircraftTab({ myRole }) {
     finally { setDeleting(null); }
   };
 
-  const inp = { width: '100%', padding: '10px 14px', background: '#0d1117', border: '1px solid #1f2937', borderRadius: '8px', color: '#f9fafb', fontSize: '14px', outline: 'none', boxSizing: 'border-box' };
-  const formColor = form.color || (form.tail_number ? getColor(form.tail_number.toUpperCase()) : '#38bdf8');
+  const inp = { width: '100%', padding: '10px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', fontSize: '14px', outline: 'none', boxSizing: 'border-box' };
+  const formColor = form.color || (form.tail_number ? getColor(form.tail_number.toUpperCase()) : 'var(--accent)');
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#6b7280', fontSize: 13 }}>Loading aircraft...</div>;
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Loading aircraft...</div>;
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: canManage ? '1fr 360px' : '1fr', gap: 24, padding: 24, alignItems: 'start' }}>
       {/* Confirm modal */}
       {confirmModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#0f1117', border: '1px solid #2d3748', borderRadius: 16, padding: 32, maxWidth: 380, width: '100%' }}>
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16, padding: 32, maxWidth: 380, width: '100%' }}>
             <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 16 }}>✈️</div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#f9fafb', margin: '0 0 8px 0', textAlign: 'center' }}>Remove Aircraft</h2>
-            <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', margin: '0 0 24px 0' }}>{confirmModal.message}</p>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px 0', textAlign: 'center' }}>Remove Aircraft</h2>
+            <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', margin: '0 0 24px 0' }}>{confirmModal.message}</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => confirmModal.onCancel()} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'transparent', border: '1px solid #374151', color: '#9ca3af', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => confirmModal.onConfirm()} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Remove</button>
+              <button onClick={() => confirmModal.onCancel()} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => confirmModal.onConfirm()} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--bad)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Remove</button>
             </div>
           </div>
         </div>
@@ -1086,12 +1086,12 @@ function AircraftTab({ myRole }) {
 
       {/* Left — list */}
       <div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>AIRCRAFT</div>
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: '#f9fafb', margin: '0 0 4px 0' }}>Team Fleet</h2>
-        <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 20 }}>{aircraft.length} aircraft tracked</p>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>AIRCRAFT</div>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', margin: '0 0 4px 0' }}>Team Fleet</h2>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>{aircraft.length} aircraft tracked</p>
 
         {msg && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 10, marginBottom: 16, fontSize: 13, background: msg.type === 'error' ? '#ef444420' : '#34d39920', border: `1px solid ${msg.type === 'error' ? '#ef444440' : '#34d39940'}`, color: msg.type === 'error' ? '#fca5a5' : '#6ee7b7' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 10, marginBottom: 16, fontSize: 13, background: msg.type === 'error' ? 'var(--bad-bg)' : 'var(--good-bg)', border: `1px solid ${msg.type === 'error' ? 'var(--bad-bg)' : 'var(--good-bg)'}`, color: msg.type === 'error' ? 'var(--bad)' : 'var(--good)' }}>
             <AlertCircle size={15} />{msg.text}
           </div>
         )}
@@ -1100,37 +1100,37 @@ function AircraftTab({ myRole }) {
           <thead>
             <tr>
               {['Tail', 'ICAO24', 'Model', 'Alerts', 'Status', canManage ? '' : null].filter(Boolean).map(h => (
-                <th key={h} style={{ fontSize: 11, fontWeight: 600, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0 12px 10px', textAlign: h === '' ? 'right' : 'left', borderBottom: '1px solid #1f2937' }}>{h}</th>
+                <th key={h} style={{ fontSize: 11, fontWeight: 600, color: 'var(--faint)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0 12px 10px', textAlign: h === '' ? 'right' : 'left', borderBottom: '1px solid var(--border)' }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {aircraft.length === 0 ? (
-              <tr><td colSpan={canManage ? 6 : 5} style={{ textAlign: 'center', padding: '48px 20px', color: '#4b5563', fontSize: 13 }}>No aircraft yet — add your first tail number on the right.</td></tr>
+              <tr><td colSpan={canManage ? 6 : 5} style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--faint)', fontSize: 13 }}>No aircraft yet — add your first tail number on the right.</td></tr>
             ) : aircraft.map(a => (
               <tr key={a.id} style={{ background: editingId === a.id ? 'rgba(59,130,246,0.05)' : 'transparent' }}>
-                <td style={{ padding: '14px 12px', borderBottom: '1px solid #111827', verticalAlign: 'middle' }}>
+                <td style={{ padding: '14px 12px', borderBottom: '1px solid var(--panel)', verticalAlign: 'middle' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div title="Click to change color" onClick={() => document.getElementById(`cp-${a.id}`).click()} style={{ width: 12, height: 12, borderRadius: '50%', background: getColor(a.tail_number), cursor: 'pointer', flexShrink: 0, border: '1.5px solid rgba(255,255,255,0.2)' }} />
                     <input id={`cp-${a.id}`} type="color" value={getColor(a.tail_number)} onChange={e => { setColor(a.tail_number, e.target.value); setColorVer(v => v + 1); }} style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }} />
-                    <span style={{ fontSize: 15, fontWeight: 700, color: '#f9fafb' }}>{a.tail_number}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{a.tail_number}</span>
                   </div>
                 </td>
-                <td style={{ padding: '14px 12px', borderBottom: '1px solid #111827', fontSize: 13, color: '#6b7280', fontFamily: 'monospace' }}>{a.icao24 || '—'}</td>
-                <td style={{ padding: '14px 12px', borderBottom: '1px solid #111827', fontSize: 12, color: '#9ca3af' }}>{a.aircraft_type || '—'}</td>
-                <td style={{ padding: '14px 12px', borderBottom: '1px solid #111827' }}>
+                <td style={{ padding: '14px 12px', borderBottom: '1px solid var(--panel)', fontSize: 13, color: 'var(--muted)', fontFamily: 'monospace' }}>{a.icao24 || '—'}</td>
+                <td style={{ padding: '14px 12px', borderBottom: '1px solid var(--panel)', fontSize: 12, color: 'var(--muted)' }}>{a.aircraft_type || '—'}</td>
+                <td style={{ padding: '14px 12px', borderBottom: '1px solid var(--panel)' }}>
                   {globalDists.map(d => (
-                    <span key={d} style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, marginRight: 4, background: (a.alert_distances || globalDists).includes(d) ? 'rgba(14,165,233,0.12)' : 'rgba(255,255,255,0.04)', color: (a.alert_distances || globalDists).includes(d) ? '#38bdf8' : '#374151', border: `1px solid ${(a.alert_distances || globalDists).includes(d) ? 'rgba(14,165,233,0.25)' : '#1f2937'}` }}>{d}nm</span>
+                    <span key={d} style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, marginRight: 4, background: (a.alert_distances || globalDists).includes(d) ? 'rgba(14,165,233,0.12)' : 'rgba(255,255,255,0.04)', color: (a.alert_distances || globalDists).includes(d) ? 'var(--accent)' : 'var(--border)', border: `1px solid ${(a.alert_distances || globalDists).includes(d) ? 'rgba(14,165,233,0.25)' : 'var(--border)'}` }}>{d}nm</span>
                   ))}
                 </td>
-                <td style={{ padding: '14px 12px', borderBottom: '1px solid #111827', textAlign: 'right' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: '#34d39920', color: '#34d399', border: '1px solid #34d39930' }}>● ACTIVE</span>
+                <td style={{ padding: '14px 12px', borderBottom: '1px solid var(--panel)', textAlign: 'right' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: 'var(--good-bg)', color: 'var(--good)', border: '1px solid var(--good-bg)' }}>● ACTIVE</span>
                 </td>
                 {canManage && (
-                  <td style={{ padding: '14px 12px', borderBottom: '1px solid #111827', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    <button style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: '#60a5fa15', color: '#60a5fa', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => editingId === a.id ? cancelEdit() : startEdit(a)}><Edit2 size={13} /></button>
+                  <td style={{ padding: '14px 12px', borderBottom: '1px solid var(--panel)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <button style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: 'var(--accent)15', color: 'var(--accent)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => editingId === a.id ? cancelEdit() : startEdit(a)}><Edit2 size={13} /></button>
                     {' '}
-                    <button style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: '#ef444415', color: '#ef4444', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => handleDelete(a.id, a.tail_number)} disabled={deleting === a.id}>
+                    <button style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: 'var(--bad-bg)', color: 'var(--bad)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => handleDelete(a.id, a.tail_number)} disabled={deleting === a.id}>
                       {deleting === a.id ? <Loader size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={13} />}
                     </button>
                   </td>
@@ -1144,50 +1144,50 @@ function AircraftTab({ myRole }) {
       {/* Right — panel */}
       {canManage && (
         <div style={{ position: 'sticky', top: 0, marginTop: 74 }}>
-          <div style={{ background: 'linear-gradient(135deg, #1e293b 0%, #172035 100%)', border: '1px solid #3b82f620', borderRadius: 16, padding: 24, boxShadow: '0 0 0 1px #3b82f615, 0 8px 32px rgba(59,130,246,0.1)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>ADD AIRCRAFT</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#f9fafb', marginBottom: 20 }}>{editingId ? 'Edit tail' : 'Track new tail'}</div>
+          <div style={{ background: 'linear-gradient(135deg, var(--panel-2) 0%, var(--panel) 100%)', border: '1px solid var(--accent-soft)', borderRadius: 16, padding: 24, boxShadow: '0 0 0 1px var(--accent)15, 0 8px 32px rgba(59,130,246,0.1)' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>ADD AIRCRAFT</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 20 }}>{editingId ? 'Edit tail' : 'Track new tail'}</div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>ICAO 24-BIT HEX</label>
-              <input style={inp} placeholder="a4992d" value={form.icao24} onChange={e => handleIcaoChange(e.target.value)} onFocus={e => e.target.style.borderColor = '#0ea5e9'} onBlur={e => e.target.style.borderColor = '#1f2937'} />
-              <p style={{ fontSize: 11, color: '#4b5563', marginTop: 4 }}>Find on <span style={{ color: '#38bdf8', cursor: 'pointer' }} onClick={() => window.electronAPI?.openExternal('https://globe.adsbexchange.com')}>ADSBExchange</span></p>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>ICAO 24-BIT HEX</label>
+              <input style={inp} placeholder="a4992d" value={form.icao24} onChange={e => handleIcaoChange(e.target.value)} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
+              <p style={{ fontSize: 11, color: 'var(--faint)', marginTop: 4 }}>Find on <span style={{ color: 'var(--accent)', cursor: 'pointer' }} onClick={() => window.electronAPI?.openExternal('https://globe.adsbexchange.com')}>ADSBExchange</span></p>
             </div>
 
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em' }}>TAIL NUMBER</label>
-                <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 600 }}>{lookingUp ? '● looking up...' : '+ AUTO'}</span>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>TAIL NUMBER</label>
+                <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>{lookingUp ? '● looking up...' : '+ AUTO'}</span>
               </div>
-              <input style={inp} placeholder="N504GR" value={form.tail_number} onChange={e => setForm(p => ({ ...p, tail_number: e.target.value.toUpperCase() }))} onFocus={e => e.target.style.borderColor = '#0ea5e9'} onBlur={e => e.target.style.borderColor = '#1f2937'} maxLength={10} />
+              <input style={inp} placeholder="N504GR" value={form.tail_number} onChange={e => setForm(p => ({ ...p, tail_number: e.target.value.toUpperCase() }))} onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = 'var(--border)'} maxLength={10} />
             </div>
 
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AIRCRAFT TYPE</label>
-                <span style={{ fontSize: 11, color: '#38bdf8', fontWeight: 600 }}>+ AUTO</span>
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AIRCRAFT TYPE</label>
+                <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>+ AUTO</span>
               </div>
-              <div style={{ background: '#0d1117', border: '1px solid #1f2937', borderRadius: 8, padding: '10px 14px', color: form.aircraft_type ? '#e5e7eb' : '#374151', fontSize: 14, minHeight: 40, display: 'flex', alignItems: 'center' }}>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', color: form.aircraft_type ? 'var(--text)' : 'var(--border)', fontSize: 14, minHeight: 40, display: 'flex', alignItems: 'center' }}>
                 {form.aircraft_type || <span style={{ fontStyle: 'italic', fontSize: 13 }}>Auto-filled from ICAO lookup</span>}
               </div>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>MAP COLOR</label>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>MAP COLOR</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div onClick={() => document.getElementById('ac-form-color').click()} style={{ width: 36, height: 36, borderRadius: '50%', background: formColor, cursor: 'pointer', flexShrink: 0, border: '2px solid rgba(255,255,255,0.15)', boxShadow: `0 0 10px ${formColor}70` }} />
                 <input id="ac-form-color" type="color" value={formColor} onChange={e => setForm(p => ({ ...p, color: e.target.value }))} style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }} />
-                <input style={{ ...inp, fontFamily: 'monospace', fontSize: 13 }} value={formColor} onChange={e => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) setForm(p => ({ ...p, color: e.target.value })); }} maxLength={7} placeholder="#38bdf8" onFocus={e => e.target.style.borderColor = '#0ea5e9'} onBlur={e => e.target.style.borderColor = '#1f2937'} />
+                <input style={{ ...inp, fontFamily: 'monospace', fontSize: 13 }} value={formColor} onChange={e => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) setForm(p => ({ ...p, color: e.target.value })); }} maxLength={7} placeholder="var(--accent)" onFocus={e => e.target.style.borderColor = 'var(--accent)'} onBlur={e => e.target.style.borderColor = 'var(--border)'} />
               </div>
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>ALERT DISTANCES</label>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>ALERT DISTANCES</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {globalDists.map(d => {
                   const active = form.alert_distances.includes(d);
                   return (
-                    <button key={d} onClick={() => toggleDist(d)} style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${active ? 'rgba(14,165,233,0.4)' : '#1f2937'}`, background: active ? 'rgba(14,165,233,0.12)' : '#0d1117', color: active ? '#38bdf8' : '#4b5563', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    <button key={d} onClick={() => toggleDist(d)} style={{ flex: 1, padding: 10, borderRadius: 8, border: `1px solid ${active ? 'rgba(14,165,233,0.4)' : 'var(--border)'}`, background: active ? 'rgba(14,165,233,0.12)' : 'var(--bg)', color: active ? 'var(--accent)' : 'var(--faint)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                       {d} nm
                     </button>
                   );
@@ -1195,11 +1195,11 @@ function AircraftTab({ myRole }) {
               </div>
             </div>
 
-            <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 12, background: saving ? '#374151' : 'linear-gradient(135deg, #0ea5e9, #0284c7)', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 12, background: saving ? 'var(--border)' : 'linear-gradient(135deg, var(--accent), var(--accent-hover))', border: 'none', borderRadius: 10, color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? <><Loader size={15} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <><Plane size={15} /> {editingId ? 'Save changes' : '+ Track aircraft'}</>}
             </button>
             {editingId && (
-              <button onClick={cancelEdit} style={{ width: '100%', padding: 10, marginTop: 8, background: 'none', border: '1px solid #1f2937', borderRadius: 10, color: '#6b7280', fontSize: 13, cursor: 'pointer' }}>Cancel edit</button>
+              <button onClick={cancelEdit} style={{ width: '100%', padding: 10, marginTop: 8, background: 'none', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--muted)', fontSize: 13, cursor: 'pointer' }}>Cancel edit</button>
             )}
           </div>
         </div>
@@ -1263,7 +1263,7 @@ function AirportsTab({ myRole }) {
       runwaysRef.current.forEach(l => l.remove()); runwaysRef.current = [];
       const { lat, lon } = selectedAirport;
       map.invalidateSize(); map.setView([lat, lon], 12);
-      const dotIcon = L.divIcon({ html: `<div style="width:10px;height:10px;background:#38bdf8;border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px #38bdf8"></div>`, className: '', iconSize: [10, 10], iconAnchor: [5, 5] });
+      const dotIcon = L.divIcon({ html: `<div style="width:10px;height:10px;background:var(--accent);border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px var(--accent)"></div>`, className: '', iconSize: [10, 10], iconAnchor: [5, 5] });
       markerRef.current = L.marker([lat, lon], { icon: dotIcon }).addTo(map);
       const cosLat = Math.cos(lat * Math.PI / 180);
       const identToHdg = (id) => { const n = parseInt(id); return (n >= 1 && n <= 36) ? n * 10 : null; };
@@ -1283,8 +1283,8 @@ function AirportsTab({ myRole }) {
         if (rw.heIdent) runwaysRef.current.push(rwLbl(hePt, rw.heIdent));
       }
       for (const nm of [10, 5, 2]) {
-        const c = L.circle([lat, lon], { radius: nm * NM_TO_M, color: '#38bdf8', weight: 2, opacity: 0.8, fill: false }).addTo(map);
-        const lbl = L.marker(L.latLng(lat + (nm * NM_TO_M) / 111320, lon), { icon: L.divIcon({ html: `<div style="font-size:10px;font-weight:700;color:#38bdf8;white-space:nowrap;background:rgba(13,17,23,0.7);padding:1px 4px;border-radius:3px">${nm} nm</div>`, className: '', iconAnchor: [16, 8] }), interactive: false }).addTo(map);
+        const c = L.circle([lat, lon], { radius: nm * NM_TO_M, color: 'var(--accent)', weight: 2, opacity: 0.8, fill: false }).addTo(map);
+        const lbl = L.marker(L.latLng(lat + (nm * NM_TO_M) / 111320, lon), { icon: L.divIcon({ html: `<div style="font-size:10px;font-weight:700;color:var(--accent);white-space:nowrap;background:rgba(13,17,23,0.7);padding:1px 4px;border-radius:3px">${nm} nm</div>`, className: '', iconAnchor: [16, 8] }), interactive: false }).addTo(map);
         ringsRef.current.push(c, lbl);
       }
     });
@@ -1310,12 +1310,12 @@ function AirportsTab({ myRole }) {
       airports.forEach(a => {
         const lat = Number(a.latitude); const lon = Number(a.longitude);
         if (!lat || !lon) return;
-        const color = a.is_active ? '#22d3a3' : '#38bdf8';
+        const color = a.is_active ? 'var(--good)' : 'var(--accent)';
 
         // Dot marker
         const dotIcon = L.divIcon({ html: `<div style="width:10px;height:10px;background:${color};border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px ${color}"></div>`, className: '', iconSize: [10, 10], iconAnchor: [5, 5] });
         const marker = L.marker([lat, lon], { icon: dotIcon }).addTo(map);
-        marker.bindPopup(L.popup({ closeButton: false, className: 'ap-popup' }).setContent(`<div style="background:#131b27;border:1px solid #1e2a3a;border-radius:6px;padding:6px 10px;font-size:12px;color:#f9fafb;white-space:nowrap"><strong>${a.airport_code}</strong> · ${a.airport_name}</div>`));
+        marker.bindPopup(L.popup({ closeButton: false, className: 'ap-popup' }).setContent(`<div style="background:var(--panel);border:1px solid var(--panel-2);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);white-space:nowrap"><strong>${a.airport_code}</strong> · ${a.airport_name}</div>`));
         listMarkersRef.current.push(marker);
 
         // Rings
@@ -1411,19 +1411,19 @@ function AirportsTab({ myRole }) {
     } catch { }
   };
 
-  const inp = { width: '100%', padding: '11px 14px', background: '#0d1117', border: '2px solid #1e2a3a', borderRadius: 8, color: '#f9fafb', fontSize: 15, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' };
+  const inp = { width: '100%', padding: '11px 14px', background: 'var(--bg)', border: '2px solid var(--panel-2)', borderRadius: 8, color: 'var(--text)', fontSize: 15, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' };
 
   return (
     <div style={{ maxWidth: 820, padding: 24 }}>
       {confirmDelete && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#0f1117', border: '1px solid #2d3748', borderRadius: 16, padding: 32, maxWidth: 380, width: '100%' }}>
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16, padding: 32, maxWidth: 380, width: '100%' }}>
             <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 16 }}>🗑️</div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#f9fafb', margin: '0 0 8px 0', textAlign: 'center' }}>Remove Airport</h2>
-            <p style={{ fontSize: 13, color: '#9ca3af', textAlign: 'center', margin: '0 0 24px 0' }}>Remove <strong style={{ color: '#f9fafb' }}>{confirmDelete.code}</strong> from the team?</p>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px 0', textAlign: 'center' }}>Remove Airport</h2>
+            <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', margin: '0 0 24px 0' }}>Remove <strong style={{ color: 'var(--text)' }}>{confirmDelete.code}</strong> from the team?</p>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'transparent', border: '1px solid #374151', color: '#9ca3af', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={() => handleDelete(confirmDelete.id)} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Remove</button>
+              <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => handleDelete(confirmDelete.id)} style={{ flex: 1, padding: '11px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--bad)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Remove</button>
             </div>
           </div>
         </div>
@@ -1432,9 +1432,9 @@ function AirportsTab({ myRole }) {
       {/* Edit alert distances modal */}
       {editingDistances && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#0f1117', border: '1px solid #2d3748', borderRadius: 16, padding: 28, maxWidth: 380, width: '100%' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#f9fafb', margin: '0 0 4px 0' }}>Alert Distances</h2>
-            <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 18px 0' }}>Choose which proximity distances trigger alerts for <strong style={{ color: '#f9fafb' }}>{editingDistances.airport_code}</strong></p>
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16, padding: 28, maxWidth: 380, width: '100%' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: '0 0 4px 0' }}>Alert Distances</h2>
+            <p style={{ fontSize: 12, color: 'var(--muted)', margin: '0 0 18px 0' }}>Choose which proximity distances trigger alerts for <strong style={{ color: 'var(--text)' }}>{editingDistances.airport_code}</strong></p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
               {AIRPORT_DIST_OPTIONS.map(d => {
                 const on = editingDistances.dists.includes(d);
@@ -1443,34 +1443,34 @@ function AirportsTab({ myRole }) {
                     const has = prev.dists.includes(d);
                     if (has && prev.dists.length === 1) return prev;
                     return { ...prev, dists: has ? prev.dists.filter(x => x !== d) : [...prev.dists, d].sort((a,b) => b-a) };
-                  })} style={{ padding: '8px 16px', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 700, border: 'none', background: on ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)', color: on ? '#38bdf8' : '#4b5563', outline: on ? '1.5px solid rgba(56,189,248,0.4)' : '1px solid transparent' }}>
+                  })} style={{ padding: '8px 16px', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 700, border: 'none', background: on ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)', color: on ? 'var(--accent)' : 'var(--faint)', outline: on ? '1.5px solid rgba(56,189,248,0.4)' : '1px solid transparent' }}>
                     {d} nm
                   </button>
                 );
               })}
             </div>
-            <div style={{ fontSize: 11, color: '#4b5563', marginBottom: 20 }}>Selected: {editingDistances.dists.join(', ')} nm — aircraft triggers alerts at these distances</div>
+            <div style={{ fontSize: 11, color: 'var(--faint)', marginBottom: 20 }}>Selected: {editingDistances.dists.join(', ')} nm — aircraft triggers alerts at these distances</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setEditingDistances(null)} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'transparent', border: '1px solid #374151', color: '#9ca3af', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleSaveDists} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+              <button onClick={() => setEditingDistances(null)} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleSaveDists} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'linear-gradient(135deg, var(--accent), var(--accent))', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Save</button>
             </div>
           </div>
         </div>
       )}
 
-      <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid #1a2030', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div style={{ marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--panel-2)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#38bdf8', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Airport Config</p>
-          <h2 style={{ fontSize: 26, fontWeight: 800, color: '#f9fafb', margin: '0 0 4px 0' }}>Team Airports</h2>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Configure destination airports the team is watching.</p>
+          <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Airport Config</p>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text)', margin: '0 0 4px 0' }}>Team Airports</h2>
+          <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>Configure destination airports the team is watching.</p>
         </div>
         {canManage && !showAdd && (
-          <button onClick={() => setShowAdd(true)} style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>+ Add Airport</button>
+          <button onClick={() => setShowAdd(true)} style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg, var(--accent), var(--accent))', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>+ Add Airport</button>
         )}
       </div>
 
       {msg && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 10, marginBottom: 16, fontSize: 13, background: msg.type === 'error' ? '#ef444420' : '#34d39920', border: `1px solid ${msg.type === 'error' ? '#ef444440' : '#34d39940'}`, color: msg.type === 'error' ? '#fca5a5' : '#6ee7b7' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 10, marginBottom: 16, fontSize: 13, background: msg.type === 'error' ? 'var(--bad-bg)' : 'var(--good-bg)', border: `1px solid ${msg.type === 'error' ? 'var(--bad-bg)' : 'var(--good-bg)'}`, color: msg.type === 'error' ? 'var(--bad)' : 'var(--good)' }}>
           <AlertCircle size={15} />{msg.text}
         </div>
       )}
@@ -1478,32 +1478,32 @@ function AirportsTab({ myRole }) {
       {/* Airport list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '32px', color: '#6b7280', fontSize: 13 }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)', fontSize: 13 }}>Loading...</div>
         ) : airports.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px', color: '#4b5563', fontSize: 13 }}>
-            <MapPin size={28} color="#2d3748" style={{ display: 'block', margin: '0 auto 10px' }} />
+          <div style={{ textAlign: 'center', padding: '32px', color: 'var(--faint)', fontSize: 13 }}>
+            <MapPin size={28} color="var(--border)" style={{ display: 'block', margin: '0 auto 10px' }} />
             No airports configured yet
           </div>
         ) : airports.map(a => {
           const dists = (a.alert_distances_nm || ['10', '5', '2']).map(Number).sort((x,y) => y - x);
           return (
-            <div key={a.id} style={{ background: '#131b27', border: `1px solid ${a.is_active ? 'rgba(34,211,163,0.25)' : '#1e2a3a'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 44, height: 44, background: a.is_active ? 'rgba(34,211,163,0.12)' : '#1e3a5f', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: a.is_active ? G : '#60a5fa', flexShrink: 0 }}>
+            <div key={a.id} style={{ background: 'var(--panel)', border: `1px solid ${a.is_active ? 'rgba(34,211,163,0.25)' : 'var(--panel-2)'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 44, height: 44, background: a.is_active ? 'rgba(34,211,163,0.12)' : 'var(--panel-2)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: a.is_active ? G : 'var(--accent)', flexShrink: 0 }}>
                 {(a.airport_code || '???').slice(0, 4)}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: '#f9fafb' }}>{a.airport_name || a.airport_code}</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{a.airport_name || a.airport_code}</span>
                   {a.is_active && <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(34,211,163,0.12)', color: G, border: '1px solid rgba(34,211,163,0.25)' }}>Active</span>}
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 6 }}>{a.airport_code} · {Number(a.latitude).toFixed(4)}, {Number(a.longitude).toFixed(4)} · Elev {a.elevation_ft_msl} ft</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>{a.airport_code} · {Number(a.latitude).toFixed(4)}, {Number(a.longitude).toFixed(4)} · Elev {a.elevation_ft_msl} ft</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {dists.map(d => (
-                    <span key={d} style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: 'rgba(56,189,248,0.1)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.2)' }}>{d} nm</span>
+                    <span key={d} style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: 'rgba(56,189,248,0.1)', color: 'var(--accent)', border: '1px solid rgba(56,189,248,0.2)' }}>{d} nm</span>
                   ))}
                   {canManage && (
                     <button onClick={() => setEditingDistances({ id: a.id, airport_code: a.airport_code, dists })}
-                      style={{ fontSize: 11, color: '#38bdf8', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', cursor: 'pointer', padding: '2px 10px', borderRadius: 6, fontWeight: 600 }}>
+                      style={{ fontSize: 11, color: 'var(--accent)', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)', cursor: 'pointer', padding: '2px 10px', borderRadius: 6, fontWeight: 600 }}>
                       Edit Distances
                     </button>
                   )}
@@ -1511,8 +1511,8 @@ function AirportsTab({ myRole }) {
               </div>
               {canManage && (
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  {!a.is_active && <button onClick={() => handleSetActive(a.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', color: '#38bdf8', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Set Active</button>}
-                  <button onClick={() => setConfirmDelete({ id: a.id, code: a.airport_code })} style={{ width: 32, height: 32, borderRadius: 7, border: 'none', background: '#ef444415', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={13} /></button>
+                  {!a.is_active && <button onClick={() => handleSetActive(a.id)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.25)', color: 'var(--accent)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Set Active</button>}
+                  <button onClick={() => setConfirmDelete({ id: a.id, code: a.airport_code })} style={{ width: 32, height: 32, borderRadius: 7, border: 'none', background: 'var(--bad-bg)', color: 'var(--bad)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={13} /></button>
                 </div>
               )}
             </div>
@@ -1522,40 +1522,40 @@ function AirportsTab({ myRole }) {
 
       {/* Overview map — always visible when airports exist */}
       {!loading && airports.length > 0 && (
-        <div style={{ border: '1px solid #1e2a3a', borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
-          <div style={{ padding: '8px 14px', fontSize: 11, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: '1px solid #1e2a3a' }}>Airport Overview</div>
+        <div style={{ border: '1px solid var(--panel-2)', borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
+          <div style={{ padding: '8px 14px', fontSize: 11, fontWeight: 700, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: '1px solid var(--panel-2)' }}>Airport Overview</div>
           <div style={{ height: 300 }}><div ref={listMapDivRef} style={{ width: '100%', height: '100%' }} /></div>
         </div>
       )}
       {!loading && airports.length > 0 && (
-        <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 20, padding: '0 2px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 20, padding: '0 2px', display: 'flex', alignItems: 'center', gap: 8 }}>
           Missing a runway at your airport?
           <button
             onClick={() => window.electronAPI?.openExternal('https://finalpingapp.com/contact')}
-            style={{ fontSize: 12, fontWeight: 600, color: '#38bdf8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+            style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
           >Contact us</button>
           and we'll add it to the next update.
         </div>
       )}
 
       {canManage && showAdd && (
-        <div style={{ background: '#131b27', border: '1px solid #1e2a3a', borderRadius: 14, padding: 24, marginTop: 8 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#f9fafb', marginBottom: 16 }}>Add Airport</div>
+        <div style={{ background: 'var(--panel)', border: '1px solid var(--panel-2)', borderRadius: 14, padding: 24, marginTop: 8 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>Add Airport</div>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Search Airport</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Search Airport</label>
             <div ref={searchRef} style={{ position: 'relative' }}>
-              <input style={{ ...inp, borderColor: showDropdown ? '#38bdf8' : '#1e2a3a' }} type="text" value={searchQuery} placeholder="ICAO, IATA, city, or airport name" onChange={e => handleSearch(e.target.value)} onFocus={() => { if (suggestions.length) setShowDropdown(true); }} />
+              <input style={{ ...inp, borderColor: showDropdown ? 'var(--accent)' : 'var(--panel-2)' }} type="text" value={searchQuery} placeholder="ICAO, IATA, city, or airport name" onChange={e => handleSearch(e.target.value)} onFocus={() => { if (suggestions.length) setShowDropdown(true); }} />
               {showDropdown && suggestions.length > 0 && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#131b27', border: '1px solid #1e2a3a', borderRadius: 8, marginTop: 4, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'var(--panel)', border: '1px solid var(--panel-2)', borderRadius: 8, marginTop: 4, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
                   {suggestions.map(ap => (
                     <div key={ap.icao} onMouseDown={() => selectAirport(ap)}
-                      style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', cursor: 'pointer', gap: 12, borderBottom: '1px solid #1a2030' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#1a2a40'}
+                      style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', cursor: 'pointer', gap: 12, borderBottom: '1px solid var(--panel-2)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--panel-2)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      <div style={{ minWidth: 36, height: 36, background: ap.iata ? '#1e3a5f' : '#1a2030', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: ap.iata ? '#60a5fa' : '#4b5563', flexShrink: 0 }}>{ap.iata || ap.icao.slice(0, 3)}</div>
+                      <div style={{ minWidth: 36, height: 36, background: ap.iata ? 'var(--panel-2)' : 'var(--panel-2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: ap.iata ? 'var(--accent)' : 'var(--faint)', flexShrink: 0 }}>{ap.iata || ap.icao.slice(0, 3)}</div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb' }}><span style={{ color: '#38bdf8' }}>{ap.icao}</span><span style={{ color: '#4b5563', fontWeight: 400 }}> · {ap.name}</span></div>
-                        <div style={{ fontSize: 11, color: '#6b7280' }}>{ap.city}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}><span style={{ color: 'var(--accent)' }}>{ap.icao}</span><span style={{ color: 'var(--faint)', fontWeight: 400 }}> · {ap.name}</span></div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)' }}>{ap.city}</div>
                       </div>
                     </div>
                   ))}
@@ -1565,26 +1565,26 @@ function AirportsTab({ myRole }) {
           </div>
 
           {selectedAirport && (
-            <div style={{ background: '#0d1117', border: '1px solid #1e2a3a', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <div style={{ width: 40, height: 40, background: '#1e3a5f', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#60a5fa', flexShrink: 0 }}>{selectedAirport.iata || selectedAirport.icao.slice(0, 3)}</div>
+            <div style={{ background: 'var(--bg)', border: '1px solid var(--panel-2)', borderRadius: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ width: 40, height: 40, background: 'var(--panel-2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: 'var(--accent)', flexShrink: 0 }}>{selectedAirport.iata || selectedAirport.icao.slice(0, 3)}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#f9fafb' }}>{selectedAirport.name}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{selectedAirport.icao} · {Number(selectedAirport.lat).toFixed(4)}, {Number(selectedAirport.lon).toFixed(4)} · Elev {selectedAirport.elev} ft</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{selectedAirport.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)' }}>{selectedAirport.icao} · {Number(selectedAirport.lat).toFixed(4)}, {Number(selectedAirport.lon).toFixed(4)} · Elev {selectedAirport.elev} ft</div>
               </div>
-              <button onClick={() => { setSelectedAirport(null); setSearchQuery(''); }} style={{ width: 28, height: 28, borderRadius: 6, border: 'none', background: '#ef444415', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={13} /></button>
+              <button onClick={() => { setSelectedAirport(null); setSearchQuery(''); }} style={{ width: 28, height: 28, borderRadius: 6, border: 'none', background: 'var(--bad-bg)', color: 'var(--bad)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={13} /></button>
             </div>
           )}
 
           {selectedAirport && (
-            <div style={{ marginBottom: 16, border: '1px solid #1e2a3a', borderRadius: 10, overflow: 'hidden', background: '#0d1117' }}>
-              <div style={{ padding: '8px 14px', fontSize: 11, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: '1px solid #1e2a3a' }}>Map Preview</div>
+            <div style={{ marginBottom: 16, border: '1px solid var(--panel-2)', borderRadius: 10, overflow: 'hidden', background: 'var(--bg)' }}>
+              <div style={{ padding: '8px 14px', fontSize: 11, fontWeight: 700, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: '1px solid var(--panel-2)' }}>Map Preview</div>
               <div style={{ height: 280 }}><div ref={mapDivRef} style={{ width: '100%', height: '100%' }} /></div>
             </div>
           )}
 
           {selectedAirport && (
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Alert Distances</label>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--faint)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Alert Distances</label>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {AIRPORT_DIST_OPTIONS.map(d => {
                   const active = alertDistances.includes(d);
@@ -1592,27 +1592,27 @@ function AirportsTab({ myRole }) {
                     <button key={d} onClick={() => toggleDist(d)} style={{
                       padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, border: 'none',
                       background: active ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)',
-                      color: active ? '#38bdf8' : '#4b5563',
+                      color: active ? 'var(--accent)' : 'var(--faint)',
                       outline: active ? '1px solid rgba(56,189,248,0.35)' : '1px solid transparent',
                     }}>{d} nm</button>
                   );
                 })}
               </div>
-              <div style={{ fontSize: 11, color: '#4b5563', marginTop: 6 }}>
+              <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 6 }}>
                 Selected: {alertDistances.join(', ')} nm — triggers proximity alerts at these distances
               </div>
             </div>
           )}
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => { setShowAdd(false); setSelectedAirport(null); setSearchQuery(''); }} style={{ flex: 1, padding: '11px', borderRadius: 10, background: 'transparent', border: '1px solid #374151', color: '#9ca3af', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={handleAdd} disabled={!selectedAirport || saving} style={{ flex: 2, padding: '11px', borderRadius: 10, background: !selectedAirport || saving ? '#374151' : 'linear-gradient(135deg, #38bdf8, #0ea5e9)', border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: !selectedAirport || saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button onClick={() => { setShowAdd(false); setSelectedAirport(null); setSearchQuery(''); }} style={{ flex: 1, padding: '11px', borderRadius: 10, background: 'transparent', border: '1px solid var(--border)', color: 'var(--muted)', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleAdd} disabled={!selectedAirport || saving} style={{ flex: 2, padding: '11px', borderRadius: 10, background: !selectedAirport || saving ? 'var(--border)' : 'linear-gradient(135deg, var(--accent), var(--accent))', border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: !selectedAirport || saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Adding...</> : <><Building2 size={14} /> Add Airport</>}
             </button>
           </div>
         </div>
       )}
-      <style>{`.leaflet-container{background:#0d1117}.leaflet-control-zoom{border-color:#1e2a3a!important}.leaflet-control-zoom a{background:#131b27!important;color:#9ca3af!important;border-color:#1e2a3a!important}.ap-popup .leaflet-popup-content-wrapper{background:transparent;box-shadow:none;padding:0}.ap-popup .leaflet-popup-tip-container{display:none}`}</style>
+      <style>{`.leaflet-container{background:var(--bg)}.leaflet-control-zoom{border-color:var(--panel-2)!important}.leaflet-control-zoom a{background:var(--panel)!important;color:var(--muted)!important;border-color:var(--panel-2)!important}.ap-popup .leaflet-popup-content-wrapper{background:transparent;box-shadow:none;padding:0}.ap-popup .leaflet-popup-tip-container{display:none}`}</style>
     </div>
   );
 }
@@ -1637,8 +1637,8 @@ function ArrivalsTab({ arrivals, onRefresh, myRole }) {
 
   function statusColor(status) {
     if (status === 'arrived') return G;
-    if (status === 'late') return '#ef4444';
-    if (status === 'cancelled') return '#4b5563';
+    if (status === 'late') return 'var(--bad)';
+    if (status === 'cancelled') return 'var(--faint)';
     return A;
   }
 
@@ -1654,13 +1654,13 @@ function ArrivalsTab({ arrivals, onRefresh, myRole }) {
   return (
     <div style={{ padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: '#f9fafb' }}>Expected Arrivals</span>
+        <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>Expected Arrivals</span>
         <button onClick={() => setShowAdd(true)} style={s.btn('primary')}>+ Add Expected</button>
       </div>
       <InlineError msg={error} />
 
       {arrivals.length === 0 ? (
-        <div style={{ color: '#4b5563', fontSize: 13, textAlign: 'center', paddingTop: 30 }}>No expected arrivals</div>
+        <div style={{ color: 'var(--faint)', fontSize: 13, textAlign: 'center', paddingTop: 30 }}>No expected arrivals</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {arrivals.map(a => (
@@ -1668,11 +1668,11 @@ function ArrivalsTab({ arrivals, onRefresh, myRole }) {
               <Clock size={15} color={statusColor(a.status)} />
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontWeight: 700, fontSize: 14, color: '#f9fafb' }}>{a.tail_number}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{a.tail_number}</span>
                   <Badge color={statusColor(a.status)}>{a.status === 'pending' ? etaLabel(a.expected_at) : a.status}</Badge>
                   {a.linked_icao24 && <Badge color={G}>Tracking</Badge>}
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                <div style={{ fontSize: 12, color: 'var(--muted)' }}>
                   {new Date(a.expected_at).toLocaleString()}{a.notes ? ` · ${a.notes}` : ''}
                 </div>
               </div>
@@ -1716,11 +1716,11 @@ function ArrivalsTab({ arrivals, onRefresh, myRole }) {
 const DEFAULT_ALERT_TYPES = [
   { key: 'landing',  label: 'Landing',          desc: 'Aircraft lands at or near the airport', icon: '🛬', color: G },
   { key: 'takeoff',  label: 'Takeoff',           desc: 'Aircraft departs from the airport',      icon: '🛫', color: A },
-  { key: '2nm',      label: '2 nm Alert',        desc: 'Aircraft within 2 nautical miles',        icon: '📡', color: '#38bdf8' },
-  { key: '5nm',      label: '5 nm Alert',        desc: 'Aircraft within 5 nautical miles',        icon: '📡', color: '#38bdf8' },
-  { key: '10nm',     label: '10 nm Alert',       desc: 'Aircraft within 10 nautical miles',       icon: '📡', color: '#38bdf8' },
-  { key: '15nm',     label: '15 nm Alert',       desc: 'Aircraft within 15 nautical miles',       icon: '📡', color: '#38bdf8' },
-  { key: '20nm',     label: '20 nm Alert',       desc: 'Aircraft within 20 nautical miles',       icon: '📡', color: '#38bdf8' },
+  { key: '2nm',      label: '2 nm Alert',        desc: 'Aircraft within 2 nautical miles',        icon: '📡', color: 'var(--accent)' },
+  { key: '5nm',      label: '5 nm Alert',        desc: 'Aircraft within 5 nautical miles',        icon: '📡', color: 'var(--accent)' },
+  { key: '10nm',     label: '10 nm Alert',       desc: 'Aircraft within 10 nautical miles',       icon: '📡', color: 'var(--accent)' },
+  { key: '15nm',     label: '15 nm Alert',       desc: 'Aircraft within 15 nautical miles',       icon: '📡', color: 'var(--accent)' },
+  { key: '20nm',     label: '20 nm Alert',       desc: 'Aircraft within 20 nautical miles',       icon: '📡', color: 'var(--accent)' },
 ];
 const DEFAULT_TEMPLATES = {
   landing:  '{tail_number} has landed at {airport}.',
@@ -1781,12 +1781,12 @@ function AlertsTab() {
     <div style={{ padding: 24, maxWidth: 800 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#f9fafb', margin: '0 0 4px 0' }}>Alert Types</h2>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>Configure which events send notifications and customize message templates.</p>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 4px 0' }}>Alert Types</h2>
+          <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>Configure which events send notifications and customize message templates.</p>
         </div>
         {settings.length === 0 && (
           <button onClick={handleInit} disabled={initing}
-            style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg, #22d3a3, #0d9488)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: initing ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: initing ? 0.7 : 1 }}>
+            style={{ padding: '10px 18px', borderRadius: 10, background: 'linear-gradient(135deg, var(--good), var(--good))', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: initing ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: initing ? 0.7 : 1 }}>
             {initing ? 'Initializing…' : 'Initialize Defaults'}
           </button>
         )}
@@ -1795,23 +1795,23 @@ function AlertsTab() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {rows.map(row => (
-          <div key={row.key} style={{ background: '#0f1319', border: `1px solid ${row.enabled ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, opacity: row.enabled ? 1 : 0.55 }}>
+          <div key={row.key} style={{ background: 'var(--bg)', border: `1px solid ${row.enabled ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, opacity: row.enabled ? 1 : 0.55 }}>
             <div style={{ width: 36, height: 36, borderRadius: 9, background: row.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
               {row.icon}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#f9fafb', marginBottom: 2 }}>{row.label}</div>
-              <div style={{ fontSize: 11, color: '#4b5563' }}>{row.configured ? (row.template.length > 60 ? row.template.slice(0, 60) + '…' : row.template) : row.desc}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{row.label}</div>
+              <div style={{ fontSize: 11, color: 'var(--faint)' }}>{row.configured ? (row.template.length > 60 ? row.template.slice(0, 60) + '…' : row.template) : row.desc}</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               {row.configured && (
                 <button onClick={() => setEditing({ alert_type: row.key, enabled: row.enabled, message_template: row.template })}
-                  style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: 'rgba(255,255,255,0.05)', color: '#9ca3af', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  style={{ width: 30, height: 30, borderRadius: 7, border: 'none', background: 'rgba(255,255,255,0.05)', color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Edit3 size={13} />
                 </button>
               )}
               <div onClick={() => handleToggle(row.key, row.enabled, row.template)}
-                style={{ width: 44, height: 24, borderRadius: 12, background: row.enabled ? G : '#1e2a3a', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                style={{ width: 44, height: 24, borderRadius: 12, background: row.enabled ? G : 'var(--panel-2)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
                 <div style={{ position: 'absolute', top: 3, left: row.enabled ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
               </div>
             </div>
@@ -1828,8 +1828,8 @@ function AlertsTab() {
               onChange={e => setEditing(x => ({ ...x, message_template: e.target.value }))}
               style={{ ...s.input, height: 90, resize: 'vertical', fontFamily: 'monospace', fontSize: 12 }}
             />
-            <div style={{ fontSize: 11, color: '#4b5563', marginTop: 6 }}>
-              Variables: <code style={{ color: '#38bdf8' }}>{'{tail_number}'}</code> <code style={{ color: '#38bdf8' }}>{'{airport}'}</code> <code style={{ color: '#38bdf8' }}>{'{altitude}'}</code> <code style={{ color: '#38bdf8' }}>{'{speed}'}</code> <code style={{ color: '#38bdf8' }}>{'{distance}'}</code>
+            <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 6 }}>
+              Variables: <code style={{ color: 'var(--accent)' }}>{'{tail_number}'}</code> <code style={{ color: 'var(--accent)' }}>{'{airport}'}</code> <code style={{ color: 'var(--accent)' }}>{'{altitude}'}</code> <code style={{ color: 'var(--accent)' }}>{'{speed}'}</code> <code style={{ color: 'var(--accent)' }}>{'{distance}'}</code>
             </div>
           </div>
           <ModalActions onCancel={() => setEditing(null)} onConfirm={handleSaveTemplate} />
@@ -1841,27 +1841,27 @@ function AlertsTab() {
 
 // ── Tab: Activity ─────────────────────────────────────────────────────────────
 function ActivityTab({ activity, onAck, onLoadMore }) {
-  const typeColors = { alert: '#ef4444', landing: G, takeoff: A, claim: '#a855f7', escalation: '#ef4444', arrival: G };
+  const typeColors = { alert: 'var(--bad)', landing: G, takeoff: A, claim: 'var(--accent)', escalation: 'var(--bad)', arrival: G };
 
   return (
     <div style={{ padding: 20 }}>
-      <div style={{ fontWeight: 700, fontSize: 15, color: '#f9fafb', marginBottom: 14 }}>Activity Log</div>
-      {activity.length === 0 && <div style={{ color: '#4b5563', fontSize: 13, textAlign: 'center', paddingTop: 30 }}>No activity yet</div>}
+      <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 14 }}>Activity Log</div>
+      {activity.length === 0 && <div style={{ color: 'var(--faint)', fontSize: 13, textAlign: 'center', paddingTop: 30 }}>No activity yet</div>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {activity.map(log => {
           const acked = log.status?.startsWith('acked');
-          const color = typeColors[log.alert_type?.includes('nm') ? 'alert' : log.alert_type] || '#6b7280';
+          const color = typeColors[log.alert_type?.includes('nm') ? 'alert' : log.alert_type] || 'var(--muted)';
           return (
             <div key={log.id} style={{ ...s.card, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, opacity: acked ? 0.6 : 1 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, color: '#d1d5db', fontWeight: 500 }}>
-                  {log.aircraft_tail} <span style={{ color: '#6b7280' }}>·</span> {log.alert_type}
+                <div style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 500 }}>
+                  {log.aircraft_tail} <span style={{ color: 'var(--muted)' }}>·</span> {log.alert_type}
                 </div>
-                <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: 11, color: 'var(--faint)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {log.message}
                 </div>
-                <div style={{ fontSize: 11, color: '#374151', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--border)', marginTop: 2 }}>
                   {new Date(log.sent_at).toLocaleTimeString()}
                   {acked && <span style={{ color: G, marginLeft: 6 }}>✓ Acked</span>}
                 </div>
@@ -1953,8 +1953,8 @@ export default function Teams({ userData }) {
       : error;
     return (
       <div style={{ background: BG, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-        <AlertTriangle size={32} color={isLicenseErr ? '#f59e0b' : '#ef4444'} />
-        <div style={{ color: isLicenseErr ? '#f59e0b' : '#ef4444', fontSize: 14, maxWidth: 320, textAlign: 'center' }}>{msg}</div>
+        <AlertTriangle size={32} color={isLicenseErr ? 'var(--warn)' : 'var(--bad)'} />
+        <div style={{ color: isLicenseErr ? 'var(--warn)' : 'var(--bad)', fontSize: 14, maxWidth: 320, textAlign: 'center' }}>{msg}</div>
         <button onClick={loadAll} style={s.btn('ghost')}>Retry</button>
       </div>
     );
@@ -1964,14 +1964,14 @@ export default function Teams({ userData }) {
     <div style={{ background: BG, height: '100%', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, -apple-system, sans-serif', overflow: 'hidden' }}>
       {/* Team header */}
       <div style={{ padding: '14px 20px', paddingRight: window.electronAPI?.platform === 'win32' ? 150 : 20, borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 12, WebkitAppRegion: 'drag' }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${G}, #16a37a)`, display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitAppRegion: 'no-drag' }}>
-          <Shield size={16} color='#0a0d12' />
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg, ${G}, var(--good))`, display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitAppRegion: 'no-drag' }}>
+          <Shield size={16} color='var(--bg)' />
         </div>
         <div style={{ WebkitAppRegion: 'no-drag', flex: 1 }}>
-          <div style={{ fontWeight: 800, fontSize: 15, color: '#f9fafb' }}>{team?.name || 'Your Team'}</div>
-          <div style={{ fontSize: 11, color: '#6b7280' }}>{myRole} · {team?.members?.length || 0} members</div>
+          <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--text)' }}>{team?.name || 'Your Team'}</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)' }}>{myRole} · {team?.members?.length || 0} members</div>
         </div>
-        <button onClick={loadAll} title="Refresh" style={{ WebkitAppRegion: 'no-drag', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 8, color: '#4b5563', cursor: 'pointer', padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={loadAll} title="Refresh" style={{ WebkitAppRegion: 'no-drag', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 8, color: 'var(--faint)', cursor: 'pointer', padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <RefreshCw size={13} />
         </button>
       </div>
@@ -1991,7 +1991,7 @@ export default function Teams({ userData }) {
                 padding: '10px 16px', cursor: 'pointer',
                 background: 'none', border: 'none',
                 borderBottom: activeTab === id ? `2px solid ${G}` : '2px solid transparent',
-                color: activeTab === id ? G : '#6b7280',
+                color: activeTab === id ? G : 'var(--muted)',
                 fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
                 transition: 'color 0.15s',
               }}

@@ -42,19 +42,19 @@ export default function TrackerStatus() {
     }
   };
 
-  const cloudColor = backendOnline === true ? '#34d399' : backendOnline === false ? '#f87171' : '#6b7280';
+  const cloudColor = backendOnline === true ? 'var(--good)' : backendOnline === false ? 'var(--bad)' : 'var(--muted)';
   const cloudLabel = backendOnline === true ? 'Active' : backendOnline === false ? 'Offline' : 'Checking...';
 
-  const gsColor = groundOnline === true ? '#34d399' : groundOnline === false ? '#f87171' : '#6b7280';
+  const gsColor = groundOnline === true ? 'var(--good)' : groundOnline === false ? 'var(--bad)' : 'var(--muted)';
   const gsLabel = groundOnline === true ? 'Online' : groundOnline === false ? 'Offline' : 'Checking...';
 
   const showGround = groundChecked && groundOnline !== null;
 
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", marginBottom: '20px' }}>
+    <div style={{ fontFamily: 'var(--font-sans)', marginBottom: '20px' }}>
       {/* Cloud Tracker */}
       <div style={{
-        background: 'linear-gradient(135deg, #1e2538 0%, #1a2030 100%)',
+        background: 'linear-gradient(135deg, var(--panel-2) 0%, var(--panel-2) 100%)',
         border: `1px solid ${cloudColor}30`,
         borderRadius: showGround ? '14px 14px 0 0' : '14px',
         padding: '18px 24px',
@@ -67,8 +67,8 @@ export default function TrackerStatus() {
             <Radio size={20} color={cloudColor} />
           </div>
           <div>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: '#f9fafb', margin: '0 0 2px 0' }}>Cloud Tracker</p>
-            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Monitoring your aircraft 24/7 — no action needed</p>
+            <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text)', margin: '0 0 2px 0' }}>Cloud Tracker</p>
+            <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0 }}>Monitoring your aircraft 24/7 — no action needed</p>
           </div>
         </div>
         <StatusBadge color={cloudColor} label={cloudLabel} online={backendOnline === true} />
@@ -77,7 +77,7 @@ export default function TrackerStatus() {
       {/* Ground Station — only shown if account has it */}
       {showGround && (
         <div style={{
-          background: 'linear-gradient(135deg, #1a2030 0%, #171e2e 100%)',
+          background: 'linear-gradient(135deg, var(--panel-2) 0%, var(--panel) 100%)',
           border: `1px solid ${gsColor}30`,
           borderTop: '1px solid rgba(255,255,255,0.05)',
           borderRadius: '0 0 14px 14px',
@@ -91,8 +91,8 @@ export default function TrackerStatus() {
               <Antenna size={20} color={gsColor} />
             </div>
             <div>
-              <p style={{ fontSize: '15px', fontWeight: '700', color: '#f9fafb', margin: '0 0 2px 0' }}>Ground Station</p>
-              <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Local SDR receiver — hyperlocal ADS-B tracking</p>
+              <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text)', margin: '0 0 2px 0' }}>Ground Station</p>
+              <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0 }}>Local SDR receiver — hyperlocal ADS-B tracking</p>
             </div>
           </div>
           <StatusBadge color={gsColor} label={gsLabel} online={groundOnline === true} />

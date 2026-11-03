@@ -50,7 +50,7 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
       backdropFilter: 'blur(4px)',
     }}>
       <div style={{
-        background: '#0f1117', border: '1px solid rgba(255,255,255,0.1)',
+        background: 'var(--bg)', border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 20, width: 480, maxWidth: '90%',
         boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
         overflow: 'hidden',
@@ -61,15 +61,15 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#0ea5e9', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 4 }}>
               Welcome to FinalPing for Teams
             </div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#f9fafb' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
               Get set up in 3 steps
             </div>
           </div>
           <button onClick={onClose} style={{
-            background: 'none', border: 'none', color: '#4b5563',
+            background: 'none', border: 'none', color: 'var(--faint)',
             cursor: 'pointer', padding: 4, borderRadius: 6,
           }}>
             <X size={18} />
@@ -80,7 +80,7 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
           {ONBOARDING_STEPS.map((s, i) => (
             <div key={s.key} style={{
               flex: 1, height: 3, borderRadius: 999,
-              background: i <= currentStep ? '#0ea5e9' : 'rgba(255,255,255,0.08)',
+              background: i <= currentStep ? 'var(--accent)' : 'rgba(255,255,255,0.08)',
               transition: 'background 0.3s',
             }} />
           ))}
@@ -88,10 +88,10 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
 
         <div style={{ padding: '24px 24px 8px' }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>{step.icon}</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#f9fafb', marginBottom: 8 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
             Step {currentStep + 1} — {step.title}
           </div>
-          <p style={{ fontSize: 14, color: '#9ca3af', lineHeight: 1.7, marginBottom: 24 }}>
+          <p style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.7, marginBottom: 24 }}>
             {step.desc}
           </p>
 
@@ -104,19 +104,19 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
                 border: `1px solid ${i === currentStep ? 'rgba(14,165,233,0.2)' : 'transparent'}`,
               }}>
                 {completedSteps.includes(s.key)
-                  ? <CheckCircle size={16} color="#22d3a3" />
+                  ? <CheckCircle size={16} color="var(--good)" />
                   : i === currentStep
-                    ? <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid #0ea5e9', flexShrink: 0 }} />
-                    : <Circle size={16} color="#374151" />
+                    ? <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--accent)', flexShrink: 0 }} />
+                    : <Circle size={16} color="var(--border)" />
                 }
                 <span style={{
                   fontSize: 13, fontWeight: i === currentStep ? 600 : 400,
-                  color: completedSteps.includes(s.key) ? '#22d3a3' : i === currentStep ? '#e0f2fe' : '#4b5563',
+                  color: completedSteps.includes(s.key) ? 'var(--good)' : i === currentStep ? 'var(--accent)' : 'var(--faint)',
                 }}>
                   {s.title}
                 </span>
                 {completedSteps.includes(s.key) && (
-                  <span style={{ marginLeft: 'auto', fontSize: 11, color: '#22d3a3' }}>Done ✓</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--good)' }}>Done ✓</span>
                 )}
               </div>
             ))}
@@ -128,7 +128,7 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
             onClick={() => onNavigate(step.route)}
             style={{
               flex: 1, padding: '12px', borderRadius: 10,
-              background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+              background: 'linear-gradient(135deg, var(--accent), var(--accent-hover))',
               border: 'none', color: '#fff', fontSize: 14, fontWeight: 600,
               cursor: 'pointer', display: 'flex', alignItems: 'center',
               justifyContent: 'center', gap: 8,
@@ -145,7 +145,7 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
                 padding: '12px 16px', borderRadius: 10,
                 background: 'transparent',
                 border: `1px solid ${stepComplete ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)'}`,
-                color: stepComplete ? '#9ca3af' : '#374151',
+                color: stepComplete ? 'var(--muted)' : 'var(--border)',
                 fontSize: 14, cursor: stepComplete ? 'pointer' : 'not-allowed',
                 transition: 'all 0.15s',
               }}
@@ -162,7 +162,7 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
                 padding: '12px 16px', borderRadius: 10,
                 background: 'transparent',
                 border: `1px solid ${stepComplete ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)'}`,
-                color: stepComplete ? '#9ca3af' : '#374151',
+                color: stepComplete ? 'var(--muted)' : 'var(--border)',
                 fontSize: 14, cursor: stepComplete ? 'pointer' : 'not-allowed',
               }}
               title={stepComplete ? '' : 'Complete this step first'}
@@ -172,7 +172,7 @@ function OnboardingModal({ onClose, onNavigate, completedSteps }) {
           )}
         </div>
 
-        <div style={{ textAlign: 'center', paddingBottom: 16, fontSize: 11, color: '#374151' }}>
+        <div style={{ textAlign: 'center', paddingBottom: 16, fontSize: 11, color: 'var(--border)' }}>
           You can always find these in the sidebar
         </div>
       </div>
@@ -186,14 +186,14 @@ const s = {
   shell: {
     display: 'flex',
     height: '100vh',
-    background: '#0b0b0b',
-    fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
+    background: 'var(--bg)',
+    fontFamily: 'var(--font-sans)',
     overflow: 'hidden',
   },
   sidebar: {
     width: '220px',
     minWidth: '220px',
-    background: 'linear-gradient(180deg, #0d1117 0%, #0b0b0b 100%)',
+    background: 'linear-gradient(180deg, var(--bg) 0%, var(--bg) 100%)',
     borderRight: '1px solid rgba(255,255,255,0.08)',
     display: 'flex',
     flexDirection: 'column',
@@ -216,15 +216,15 @@ const s = {
   },
   logoTop: {
     fontSize: '8px', fontWeight: '700', letterSpacing: '0.18em',
-    textTransform: 'uppercase', color: '#6b7280', lineHeight: 1, marginBottom: '6px',
+    textTransform: 'uppercase', color: 'var(--muted)', lineHeight: 1, marginBottom: '6px',
   },
   logoMain: {
     fontSize: '18px', fontWeight: '800', letterSpacing: '-0.02em',
-    color: '#f9fafb', lineHeight: 1.1,
+    color: 'var(--text)', lineHeight: 1.1,
   },
   logoTeamsBadge: {
     fontSize: '8px', fontWeight: '800', letterSpacing: '0.1em',
-    textTransform: 'uppercase', color: '#0ea5e9',
+    textTransform: 'uppercase', color: 'var(--accent)',
     background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.28)',
     padding: '2px 6px', borderRadius: '4px',
     verticalAlign: 'middle', display: 'inline-block', marginLeft: '6px',
@@ -232,11 +232,11 @@ const s = {
   },
   logoLine: {
     display: 'block', width: '40px', height: '2px',
-    background: 'linear-gradient(90deg, #0ea5e9, transparent)',
+    background: 'linear-gradient(90deg, var(--accent), transparent)',
     borderRadius: '999px', marginTop: '4px', marginBottom: '12px',
   },
   logoEmail: {
-    fontSize: '11px', color: '#4b5563',
+    fontSize: '11px', color: 'var(--faint)',
     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
   },
   nav: {
@@ -246,13 +246,13 @@ const s = {
   },
   navSection: {
     fontSize: '10px', fontWeight: '700', letterSpacing: '0.1em',
-    textTransform: 'uppercase', color: '#374151', padding: '8px 12px 4px',
+    textTransform: 'uppercase', color: 'var(--border)', padding: '8px 12px 4px',
   },
   navLink: (active) => ({
     display: 'flex', alignItems: 'center', gap: '10px',
     padding: '9px 12px', borderRadius: '10px', textDecoration: 'none',
     fontSize: '13px', fontWeight: active ? '600' : '500',
-    color: active ? '#e0f2fe' : '#6b7280',
+    color: active ? 'var(--accent)' : 'var(--muted)',
     background: active ? 'linear-gradient(135deg, rgba(14,165,233,0.18), rgba(2,132,199,0.08))' : 'transparent',
     border: active ? '1px solid rgba(14,165,233,0.22)' : '1px solid transparent',
     boxShadow: active ? '0 0 20px rgba(14,165,233,0.08)' : 'none',
@@ -260,7 +260,7 @@ const s = {
   }),
   navDot: {
     width: '6px', height: '6px', borderRadius: '50%',
-    background: '#0ea5e9', boxShadow: '0 0 6px rgba(14,165,233,0.8)',
+    background: 'var(--accent)', boxShadow: '0 0 6px rgba(14,165,233,0.8)',
     marginLeft: 'auto', flexShrink: 0,
   },
   sidebarBottom: {
@@ -270,13 +270,13 @@ const s = {
   logoutBtn: {
     display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
     padding: '9px 12px', background: 'none', border: '1px solid transparent',
-    borderRadius: '10px', color: '#6b7280', fontSize: '13px',
+    borderRadius: '10px', color: 'var(--muted)', fontSize: '13px',
     fontWeight: '500', cursor: 'pointer', transition: 'all 0.15s',
   },
   main: {
     flex: 1, overflow: 'hidden',
     display: 'flex', flexDirection: 'column',
-    background: 'radial-gradient(ellipse 100% 50% at 50% -10%, #0d1f2d 0%, #0b0b0b 60%)',
+    background: 'radial-gradient(ellipse 100% 50% at 50% -10%, var(--panel-2) 0%, var(--bg) 60%)',
   },
   content: { padding: '32px', paddingRight: isWindows ? 150 : 32, overflowY: 'auto', flex: 1 },
 };
@@ -398,7 +398,7 @@ export default function Dashboard({ onLogout }) {
   if (loading) {
     return (
       <div style={{ ...s.shell, alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#4b5563', fontSize: '13px' }}>Loading...</div>
+        <div style={{ color: 'var(--faint)', fontSize: '13px' }}>Loading...</div>
       </div>
     );
   }
@@ -418,20 +418,20 @@ export default function Dashboard({ onLogout }) {
 
       {showLogoutConfirm && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '28px 28px 24px', width: '320px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '28px 28px 24px', width: '320px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <LogOut size={18} color='#f87171' />
-              <span style={{ color: '#f1f5f9', fontSize: '15px', fontWeight: 700 }}>Log out</span>
+              <LogOut size={18} color='var(--bad)' />
+              <span style={{ color: 'var(--text)', fontSize: '15px', fontWeight: 700 }}>Log out</span>
             </div>
-            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 22px' }}>Are you sure you want to log out of FinalPing for Teams?</p>
+            <p style={{ color: 'var(--muted)', fontSize: '13px', margin: '0 0 22px' }}>Are you sure you want to log out of FinalPing for Teams?</p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                style={{ padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#94a3b8', fontSize: '13px', cursor: 'pointer' }}
+                style={{ padding: '8px 18px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--muted)', fontSize: '13px', cursor: 'pointer' }}
               >Cancel</button>
               <button
                 onClick={confirmLogout}
-                style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: 'var(--bad)', color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
               >Log out</button>
             </div>
           </div>
@@ -441,32 +441,32 @@ export default function Dashboard({ onLogout }) {
       {connectionLost && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-          background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+          background: 'linear-gradient(135deg, var(--panel), var(--panel))',
           borderBottom: '1px solid rgba(239,68,68,0.3)',
           padding: '8px 20px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 16, fontSize: 12, color: '#d1d5db',
+          gap: 16, fontSize: 12, color: 'var(--muted)',
         }}>
-          <span>⚠️ <strong style={{ color: '#f87171' }}>Connection lost</strong> — unable to reach the server.</span>
+          <span>⚠️ <strong style={{ color: 'var(--bad)' }}>Connection lost</strong> — unable to reach the server.</span>
         </div>
       )}
 
       {isViewOnly && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9997,
-          background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+          background: 'linear-gradient(135deg, var(--panel), var(--panel))',
           borderBottom: '1px solid rgba(245,158,11,0.3)',
           padding: '8px 20px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 16, fontSize: 12, color: '#d1d5db',
+          gap: 16, fontSize: 12, color: 'var(--muted)',
         }}>
-          <span>👀 You&apos;re in <strong style={{ color: '#f59e0b' }}>view-only mode</strong> — purchase a license to start tracking aircraft.</span>
+          <span>👀 You&apos;re in <strong style={{ color: 'var(--warn)' }}>view-only mode</strong> — purchase a license to start tracking aircraft.</span>
           <button
             onClick={() => window.electronAPI?.openExternal('https://finalpingapp.com/pricing')}
             style={{
               padding: '4px 14px', borderRadius: 999,
               background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)',
-              color: '#f59e0b', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+              color: 'var(--warn)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
             }}
           >
             View Plans →
@@ -500,12 +500,12 @@ export default function Dashboard({ onLogout }) {
             style={s.logoutBtn}
             onClick={() => window.electronAPI?.openExternal('https://finalpingapp.com/docs')}
             onMouseEnter={e => {
-              e.currentTarget.style.color = '#0ea5e9';
+              e.currentTarget.style.color = 'var(--accent)';
               e.currentTarget.style.borderColor = 'rgba(14,165,233,0.2)';
               e.currentTarget.style.background = 'rgba(14,165,233,0.06)';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.color = '#6b7280';
+              e.currentTarget.style.color = 'var(--muted)';
               e.currentTarget.style.borderColor = 'transparent';
               e.currentTarget.style.background = 'none';
             }}
@@ -516,12 +516,12 @@ export default function Dashboard({ onLogout }) {
             style={s.logoutBtn}
             onClick={() => window.electronAPI?.openExternal('https://finalpingapp.com/contact')}
             onMouseEnter={e => {
-              e.currentTarget.style.color = '#0ea5e9';
+              e.currentTarget.style.color = 'var(--accent)';
               e.currentTarget.style.borderColor = 'rgba(14,165,233,0.2)';
               e.currentTarget.style.background = 'rgba(14,165,233,0.06)';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.color = '#6b7280';
+              e.currentTarget.style.color = 'var(--muted)';
               e.currentTarget.style.borderColor = 'transparent';
               e.currentTarget.style.background = 'none';
             }}
@@ -532,19 +532,19 @@ export default function Dashboard({ onLogout }) {
             style={s.logoutBtn}
             onClick={handleLogout}
             onMouseEnter={e => {
-              e.currentTarget.style.color = '#f87171';
+              e.currentTarget.style.color = 'var(--bad)';
               e.currentTarget.style.borderColor = 'rgba(248,113,113,0.2)';
               e.currentTarget.style.background = 'rgba(248,113,113,0.06)';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.color = '#6b7280';
+              e.currentTarget.style.color = 'var(--muted)';
               e.currentTarget.style.borderColor = 'transparent';
               e.currentTarget.style.background = 'none';
             }}
           >
             <LogOut size={14} /> Logout
           </button>
-          <div style={{ fontSize: '10px', color: '#374151', textAlign: 'center', marginTop: '8px', letterSpacing: '0.05em' }}>
+          <div style={{ fontSize: '10px', color: 'var(--border)', textAlign: 'center', marginTop: '8px', letterSpacing: '0.05em' }}>
             {appVersion ? `v${appVersion}` : ''}
           </div>
         </div>
@@ -573,14 +573,14 @@ function NavItem({ to, icon: Icon, label, active }) {
       onMouseEnter={e => {
         if (!active) {
           e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-          e.currentTarget.style.color = '#9ca3af';
+          e.currentTarget.style.color = 'var(--muted)';
           e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
         }
       }}
       onMouseLeave={e => {
         if (!active) {
           e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = '#6b7280';
+          e.currentTarget.style.color = 'var(--muted)';
           e.currentTarget.style.borderColor = 'transparent';
         }
       }}
