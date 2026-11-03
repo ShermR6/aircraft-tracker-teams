@@ -4,7 +4,6 @@ import { LogOut, LayoutDashboard, Map, ScrollText, MessageSquare, BookOpen, User
 import StorageService from '../services/storage';
 import APIService from '../services/api';
 import AccountDashboard from './AccountDashboard';
-import TrackerStatus from './TrackerStatus';
 import LiveMap from './LiveMap';
 import Logs from './Logs';
 import Teams from './Teams';
@@ -276,15 +275,17 @@ const s = {
   main: {
     flex: 1, overflow: 'hidden',
     display: 'flex', flexDirection: 'column',
-    background: 'radial-gradient(ellipse 100% 50% at 50% -10%, var(--panel-2) 0%, var(--bg) 60%)',
+    background: 'var(--bg)',
   },
-  content: { padding: '32px', paddingRight: isWindows ? 150 : 32, overflowY: 'auto', flex: 1 },
+  content: { padding: '24px 28px 32px', overflowY: 'auto', flex: 1 },
+  dragStrip: {
+    height: 36, flexShrink: 0, WebkitAppRegion: 'drag',
+  },
 };
 
 function DashboardHome({ isViewOnly }) {
   return (
     <>
-      <TrackerStatus />
       <AccountDashboard />
     </>
   );
@@ -550,10 +551,8 @@ export default function Dashboard({ onLogout }) {
         </div>
       </div>
 
-      {/* Invisible drag strip — spans the full top of the window */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 36, WebkitAppRegion: 'drag', zIndex: 9999, pointerEvents: 'none' }} />
-
       <div style={{ ...s.main, paddingTop: (connectionLost ? 36 : 0) + (isViewOnly ? 36 : 0) }}>
+        <div style={s.dragStrip} />
         <Routes>
           <Route path="/map" element={<LiveMap />} />
           <Route path="/" element={<div style={s.content}><DashboardHome isViewOnly={isViewOnly} /></div>} />

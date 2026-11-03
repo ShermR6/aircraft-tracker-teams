@@ -236,7 +236,7 @@ function createWindow() {
         ...details.responseHeaders,
         'Content-Security-Policy': [
           "default-src 'self' 'unsafe-inline' 'unsafe-eval' file: data:; " +
-          "connect-src 'self' https://*.railway.app https://railway.app https://*.cartocdn.com https://*.openstreetmap.org https://api.adsbdb.com; " +
+          "connect-src 'self' https://*.railway.app https://railway.app https://services.arcgisonline.com https://*.openstreetmap.org https://api.adsbdb.com; " +
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
           "font-src 'self' https://fonts.gstatic.com data:; " +
           "img-src 'self' file: data: https: blob:;"

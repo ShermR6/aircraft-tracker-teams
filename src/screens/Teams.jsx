@@ -10,6 +10,7 @@ import LiveMap from './LiveMap';
 import { getColor, setColor, ensureLoaded } from '../services/aircraftColors';
 import airportsData from '../data/airports.json';
 import L from 'leaflet';
+import { addBaseLayers } from '../config/mapTiles';
 import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -1254,7 +1255,7 @@ function AirportsTab({ myRole }) {
       if (!mapDivRef.current) return;
       if (!mapRef.current) {
         const m = L.map(mapDivRef.current, { center: [39.5, -98.35], zoom: 4, zoomControl: true, attributionControl: false });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(m);
+        addBaseLayers(L, m);
         mapRef.current = m;
       }
       const map = mapRef.current;
@@ -1298,7 +1299,7 @@ function AirportsTab({ myRole }) {
       if (!listMapDivRef.current) return;
       if (!listMapRef.current) {
         const m = L.map(listMapDivRef.current, { center: [39.5, -98.35], zoom: 4, zoomControl: true, attributionControl: false });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(m);
+        addBaseLayers(L, m);
         listMapRef.current = m;
       }
       const map = listMapRef.current;

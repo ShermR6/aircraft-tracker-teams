@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader, Check, Trash2, Edit2, X, Plus } from 'lucide-react';
 import APIService from '../services/api';
 import L from 'leaflet';
+import { addBaseLayers } from '../config/mapTiles';
 import 'leaflet/dist/leaflet.css';
 import airportsData from '../data/airports.json';
 
@@ -169,7 +170,7 @@ export default function AirportConfig({ isViewOnly = false }) {
     const map = L.map(mapDivRef.current, {
       center: [39.5, -98.35], zoom: 4, zoomControl: true, attributionControl: false,
     });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+    addBaseLayers(L, map);
     mapRef.current = map;
     setTimeout(() => map.invalidateSize(), 0);
     return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; } };

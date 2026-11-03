@@ -1,329 +1,313 @@
-import React, { useState, useEffect } from 'react';
-import { User, Shield, Calendar, Plane, Zap, RefreshCw, Bell, AlertTriangle, Clock, CreditCard, ExternalLink } from 'lucide-react';
+/**
+ * Dashboard home (Teams).
+ *
+ * Deliberately the same screen as the personal app's DashboardHome — same kit
+ * components, same panels, same order — because the two apps should read as
+ * one product. Where this one differs it is because teams genuinely have
+ * something personal accounts do not:
+ *
+ *   Coverage        — replaces the personal app's Ground Station card. Teams
+ *                     have no SDR; what they need to know at a glance is
+ *                     whether anyone is actually on duty to receive an alert.
+ *   On duty now     — who is covering, and in what role.
+ *
+ * Everything team-scoped loads independently of the account itself. These used
+ * to share a Promise.all with getCurrentUser(), and because /api/teams/* 403s
+ * for anyone not yet in a team, that rejection blanked the whole screen and
+ * reported the plan as "Starter".
+ */
+import React, { useState, useEffect, useCallback } from 'react';
+import { Cloud, Users, Plane, Bell, UserCheck } from 'lucide-react';
 import APIService from '../services/api';
 import StorageService from '../services/storage';
+import {
+  PageHead, Stamp, Panel, PanelHead, Count, StatusCard, StatStrip,
+  TableWrap, Table, Th, Td, Pill, Badge, Tail, StageBar, Empty,
+} from '../ui/kit';
 
-const s = {
-  page: { maxWidth: '900px', margin: '0 auto', fontFamily: 'var(--font-sans)' },
-  header: { marginBottom: '24px' },
-  headerTitle: { fontSize: '28px', fontWeight: '700', color: 'var(--text)', margin: '0 0 4px 0' },
-  headerSub: { fontSize: '14px', color: 'var(--muted)', margin: 0 },
-  grid3: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' },
-  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' },
-  card: { background: 'linear-gradient(135deg, var(--panel-2) 0%, var(--panel-2) 100%)', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px' },
-  cardAccent: (color) => ({ background: `linear-gradient(135deg, ${color}15 0%, var(--panel-2) 100%)`, border: `1px solid ${color}30`, borderRadius: '16px', padding: '24px' }),
-  cardTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' },
-  iconBox: (color) => ({ width: '44px', height: '44px', borderRadius: '12px', background: `${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }),
-  badge: (color) => ({ fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: '20px', background: `${color}20`, color, border: `1px solid ${color}30` }),
-  cardLabel: { fontSize: '12px', fontWeight: '500', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' },
-  cardValue: { fontSize: '22px', fontWeight: '700', color: 'var(--text)', margin: 0 },
-  row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' },
-  rowLast: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0' },
-  rowLabel: { fontSize: '13px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '8px' },
-  rowValue: { fontSize: '13px', fontWeight: '600', color: 'var(--text)' },
-  sectionTitle: { fontSize: '15px', fontWeight: '600', color: 'var(--text)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' },
-  statusDot: (color) => ({ width: '8px', height: '8px', borderRadius: '50%', background: color, boxShadow: `0 0 8px ${color}`, flexShrink: 0 }),
-  refreshBtn: { background: 'none', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--muted)', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' },
-  loading: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--muted)', fontSize: '14px' },
-  alertRow: { display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)' },
-  alertRowLast: { display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 0' },
-  alertIcon: (type) => ({ width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0, background: type === 'landing' ? 'var(--good-bg)' : 'var(--accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }),
-  alertTail: { fontSize: '13px', fontWeight: '700', color: 'var(--text)', marginBottom: '2px' },
-  alertType: { fontSize: '11px', color: 'var(--muted)' },
-  alertTime: { fontSize: '11px', color: 'var(--faint)', marginLeft: 'auto', whiteSpace: 'nowrap', flexShrink: 0 },
-  emptyLog: { textAlign: 'center', padding: '24px', color: 'var(--faint)', fontSize: '13px' },
+const REFRESH_MS = 15000;
+
+function fmtDate(v) {
+  if (!v) return '—';
+  const d = new Date(v);
+  return isNaN(d) ? '—' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function ago(v) {
+  if (!v) return '—';
+  const secs = Math.max(0, (Date.now() - new Date(v).getTime()) / 1000);
+  if (secs < 60) return `${Math.floor(secs)}s ago`;
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
+  if (secs < 86400) {
+    const h = Math.floor(secs / 3600);
+    return `${h}h ${Math.floor((secs - h * 3600) / 60)}m ago`;
+  }
+  return `${Math.floor(secs / 86400)}d ago`;
+}
+
+/** Rings are ordered widest-first; count how many the aircraft is inside. */
+function stageOf(distance, rings) {
+  if (!Array.isArray(rings) || !rings.length) return { filled: 0, label: 'Tracking', t: 'neutral' };
+  const sorted = [...rings].map(Number).filter(n => !isNaN(n)).sort((a, b) => b - a);
+  const filled = sorted.filter(r => distance <= r).length;
+  if (filled >= sorted.length) return { filled, label: 'Final', t: 'accent' };
+  if (filled === 0) return { filled: 0, label: 'Tracking', t: 'neutral' };
+  if (filled === 1) return { filled, label: 'Inbound', t: 'good' };
+  return { filled, label: 'Approach', t: 'good' };
+}
+
+function etaOf(distanceNm, kts) {
+  if (!kts || kts < 30 || !distanceNm) return '—';
+  const mins = (distanceNm / kts) * 60;
+  if (mins < 1) return '< 1 min';
+  if (mins < 60) return `${Math.round(mins)} min`;
+  return `${(mins / 60).toFixed(1)} hr`;
+}
+
+const CHANNEL_LABEL = {
+  discord: 'Discord', slack: 'Slack', telegram: 'Telegram', email: 'Email',
+  sms: 'SMS', webhook: 'Webhook', teams: 'Microsoft Teams',
+  google_chat: 'Google Chat', ms_teams: 'Microsoft Teams',
 };
 
-function timeAgo(isoString) {
-  const utc = isoString && !isoString.endsWith('Z') && !isoString.includes('+')
-    ? isoString + 'Z' : isoString;
-  const diff = Date.now() - new Date(utc).getTime();
-  const mins = Math.floor(diff / 60000);
-  const hours = Math.floor(mins / 60);
-  const days = Math.floor(hours / 24);
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (mins > 0) return `${mins}m ago`;
-  return 'Just now';
-}
-
-function alertTypeLabel(type) {
-  if (type === 'landing') return 'Landed';
-  if (type?.includes('nm')) return `${type} alert`;
-  return type || 'Alert';
-}
-
-function integrationIcon(type) {
-  const icons = { discord: '🎮', slack: '💬', teams: '🟦', email: '📧' };
-  return icons[type] || '🔔';
-}
+const ROLE_LABEL = { owner: 'Owner', admin: 'Admin', member: 'Member', viewer: 'Viewer' };
 
 export default function AccountDashboard() {
   const [user, setUser] = useState(null);
-  const [aircraft, setAircraft] = useState([]);
-  const [liveAircraft, setLiveAircraft] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [stats, setStats] = useState(null);
   const [expiresAt, setExpiresAt] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [fleet, setFleet] = useState([]);
+  const [live, setLive] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [notifs, setNotifs] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [airportRings, setAirportRings] = useState(null);
+  const [backendOnline, setBackendOnline] = useState(null);
+  const [updatedAt, setUpdatedAt] = useState(null);
 
-  useEffect(() => { loadData(); }, []);
+  const load = useCallback(async () => {
+    const settle = (p) => p.then(v => v).catch(() => null);
+    const [u, ac, lv, st, nt, hc, duty, cfg] = await Promise.all([
+      settle(APIService.getCurrentUser()),
+      settle(APIService.getAircraft()),
+      settle(APIService.getLiveAircraft()),
+      settle(APIService.getNotificationStats()),
+      settle(APIService.getRecentNotifications(60)),
+      settle(APIService.healthCheck()),
+      settle(APIService.getOnDutyMembers()),
+      settle(APIService.getAirportConfig()),
+    ]);
 
-  const loadData = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    try {
-      const [userData, aircraftData] = await Promise.all([
-        APIService.getCurrentUser(),
-        APIService.getAircraft(),
-      ]);
-      setUser(userData);
-      setAircraft(aircraftData || []);
-
-      const expiryValue = userData?.expires_at || userData?.expiry_date || userData?.license_expires_at || userData?.expiry;
-      if (expiryValue) setExpiresAt(new Date(expiryValue));
+    if (u) {
+      setUser(u);
+      const exp = u.expires_at || u.expiry_date || u.license_expires_at || u.expiry;
+      if (exp) setExpiresAt(exp);
       else {
-        const stored = await StorageService.getUserData();
-        const storedExpiry = stored?.expires_at || stored?.expiry_date || stored?.license_expires_at;
-        if (storedExpiry) setExpiresAt(new Date(storedExpiry));
+        const stored = await StorageService.getUserData().catch(() => null);
+        setExpiresAt(stored?.expires_at || stored?.expiry_date || stored?.license_expires_at || null);
       }
-
-      try {
-        const liveData = await APIService.getLiveAircraft();
-        setLiveAircraft(liveData || []);
-      } catch { /* silently skip */ }
-
-      try {
-        const [notifData, statsData] = await Promise.all([
-          APIService.getRecentNotifications(8),
-          APIService.getNotificationStats(),
-        ]);
-        setNotifications(notifData || []);
-        setStats(statsData || null);
-      } catch { /* silently skip */ }
-
-    } catch (err) {
-      console.error('Failed to load dashboard:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+    } else {
+      // Fall back to the last known identity rather than rendering a plan the
+      // account does not have.
+      const stored = await StorageService.getUserData().catch(() => null);
+      if (stored) setUser(stored);
     }
+    if (Array.isArray(ac)) setFleet(ac);
+    if (Array.isArray(lv)) setLive(lv);
+    if (st) setStats(st);
+    if (Array.isArray(nt)) setNotifs(nt);
+    if (Array.isArray(duty)) setMembers(duty);
+    if (cfg?.alert_distances_nm?.length) setAirportRings(cfg.alert_distances_nm);
+    setBackendOnline(hc !== null);
+    setUpdatedAt(new Date());
+  }, []);
+
+  useEffect(() => {
+    load();
+    const t = setInterval(load, REFRESH_MS);
+    return () => clearInterval(t);
+  }, [load]);
+
+  // ── Inbound now: airborne, closing, nearest first ──
+  const ringsFor = (tail) => {
+    const m = fleet.find(a => a.tail_number === tail);
+    return m?.alert_distances?.length ? m.alert_distances : airportRings;
   };
+  const inbound = live
+    .filter(a => !a.on_ground && a.is_approaching)
+    .sort((a, b) => (a.distance_nm ?? 999) - (b.distance_nm ?? 999));
 
-  const handleBillingPortal = async () => {
-    window.electronAPI?.openExternal('https://finalpingapp.com/dashboard?tab=billing');
-  };
+  // ── Alert delivery: group recent notifications per channel ──
+  const byChannel = {};
+  notifs.forEach(n => {
+    const k = n.integration_type || 'unknown';
+    if (!byChannel[k]) byChannel[k] = { sent: 0, failed: 0, last: null };
+    const c = byChannel[k];
+    c.sent += 1;
+    if (n.status && String(n.status).toLowerCase() !== 'sent' && String(n.status).toLowerCase() !== 'success') {
+      c.failed += 1;
+    }
+    if (!c.last || new Date(n.sent_at) > new Date(c.last)) c.last = n.sent_at;
+  });
+  const channels = Object.entries(byChannel).sort((a, b) => b[1].sent - a[1].sent);
 
-  if (loading) return <div style={s.loading}>Loading your dashboard...</div>;
+  // ── Coverage: who is actually on duty to receive an alert ──
+  const onDuty = members.filter(m => m.on_duty);
 
-  const color = 'var(--accent)';
-  const joinDate = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  const tierLabel = user?.license_tier
+    ? user.license_tier.charAt(0).toUpperCase() + user.license_tier.slice(1)
     : '—';
 
-  let expiryWarning = null;
-  if (expiresAt) {
-    const msLeft = expiresAt - Date.now();
-    const hoursLeft = Math.floor(msLeft / (1000 * 60 * 60));
-    const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
-    if (msLeft <= 0) expiryWarning = { label: 'expired', daysLeft: 0, urgent: true, expired: true };
-    else if (hoursLeft < 24) expiryWarning = { label: `${hoursLeft} hour${hoursLeft !== 1 ? 's' : ''}`, daysLeft: 0, urgent: true };
-    else if (daysLeft <= 7) expiryWarning = { label: `${daysLeft} day${daysLeft !== 1 ? 's' : ''}`, daysLeft, urgent: daysLeft <= 2 };
-  }
-
-  const currentTier = user?.license_tier || 'starter';
-
   return (
-    <div style={s.page}>
-      <div style={{ ...s.header, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div>
-          <h2 style={s.headerTitle}>Account Dashboard</h2>
-          <p style={s.headerSub}>Your account overview and system status</p>
-        </div>
-        <button style={s.refreshBtn} onClick={() => loadData(true)}
-          onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--faint)'}
-          onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-          <RefreshCw size={12} style={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
-          Refresh
-        </button>
+    <>
+      <PageHead
+        title="Dashboard"
+        subtitle="Your team overview and system status"
+        right={<Stamp>{updatedAt ? `Updated ${updatedAt.toLocaleTimeString()}` : 'Loading…'}</Stamp>}
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 13, marginBottom: 14 }}>
+        <StatusCard
+          icon={<Cloud size={19} />}
+          title="Cloud Tracker"
+          desc="Monitoring your aircraft 24/7 — no action needed"
+          right={backendOnline
+            ? <Badge t="good">Online</Badge>
+            : <Badge t={backendOnline === null ? 'neutral' : 'bad'}>
+                {backendOnline === null ? 'Checking' : 'Offline'}
+              </Badge>}
+        />
+        <StatusCard
+          icon={<Users size={19} />}
+          title="Coverage"
+          desc="Team members on duty to receive alerts right now"
+          right={onDuty.length
+            ? <Badge t="good">{onDuty.length} on duty</Badge>
+            : <Badge t={members.length ? 'warn' : 'neutral'}>
+                {members.length ? 'Nobody on duty' : 'No team'}
+              </Badge>}
+        />
       </div>
 
-      {expiryWarning && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
-          padding: '12px 16px', borderRadius: '12px', marginBottom: '16px',
-          background: expiryWarning.urgent ? 'var(--bad-bg)' : 'var(--warn-bg)',
-          border: `1px solid ${expiryWarning.urgent ? 'var(--bad-bg)' : 'var(--warn-bg)'}`,
-        }}>
-          <AlertTriangle size={16} color={expiryWarning.urgent ? 'var(--bad)' : 'var(--warn)'} />
-          <p style={{ fontSize: '13px', color: expiryWarning.urgent ? 'var(--bad)' : 'var(--warn)', margin: 0, flex: 1 }}>
-            {expiryWarning.expired
-              ? 'Your license has expired. Renew to continue receiving alerts.'
-              : `Your license expires in ${expiryWarning.label}. Renew soon to avoid interruption.`}
-          </p>
-          <span
-            style={{ fontSize: '12px', fontWeight: '700', color: expiryWarning.urgent ? 'var(--bad)' : 'var(--warn)', cursor: 'pointer', whiteSpace: 'nowrap' }}
-            onClick={() => window.electronAPI?.openExternal('https://finalpingapp.com/pricing')}
-          >Renew →</span>
-        </div>
-      )}
+      <StatStrip items={[
+        { label: 'License Tier', value: tierLabel },
+        { label: 'Tracked Aircraft', value: fleet.length },
+        { label: 'Alerts This Week', value: stats?.this_week ?? '—' },
+        { label: 'Expires', value: fmtDate(expiresAt), small: true },
+      ]} />
 
-      <div style={s.grid3}>
-        <div style={s.cardAccent(color)}>
-          <div style={s.cardTop}>
-            <div style={s.iconBox(color)}><Shield size={20} color={color} /></div>
-            <span style={s.badge(color)}>{currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</span>
-          </div>
-          <p style={s.cardLabel}>License Tier</p>
-          <p style={{ ...s.cardValue, color }}>{currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</p>
-        </div>
+      <Panel style={{ marginTop: 14 }}>
+        <PanelHead
+          title="Inbound now"
+          right={<Count>{inbound.length ? `${inbound.length} in range` : 'None in range'}</Count>}
+        />
+        {inbound.length === 0 ? (
+          <Empty
+            icon={<Plane size={22} />}
+            title="Nothing inbound right now"
+            hint="Aircraft appear here as they close on your airport."
+          />
+        ) : (
+          <TableWrap>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Tail</Th><Th>Type</Th><Th>Stage</Th><Th>Distance</Th><Th>ETA</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {inbound.map(a => {
+                  const st = stageOf(a.distance_nm, ringsFor(a.tail_number));
+                  const type = fleet.find(f => f.tail_number === a.tail_number)?.aircraft_type;
+                  return (
+                    <tr key={a.icao24 || a.tail_number}>
+                      <Td><Tail>{a.tail_number}</Tail></Td>
+                      <Td dim>{type || '—'}</Td>
+                      <Td>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
+                          <StageBar filled={st.filled} />
+                          <Pill t={st.t}>{st.label}</Pill>
+                        </span>
+                      </Td>
+                      <Td mono>{a.distance_nm != null ? `${a.distance_nm.toFixed(1)} nm` : '—'}</Td>
+                      <Td mono>{etaOf(a.distance_nm, a.velocity_kts)}</Td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </TableWrap>
+        )}
+      </Panel>
 
-        <div style={s.cardAccent('var(--accent)')}>
-          <div style={s.cardTop}>
-            <div style={s.iconBox('var(--accent)')}><Plane size={20} color="var(--accent)" /></div>
-            <span style={s.badge('var(--accent)')}>{aircraft.length} tracked</span>
-          </div>
-          <p style={s.cardLabel}>Aircraft</p>
-          <p style={{ ...s.cardValue, color: 'var(--accent)' }}>{aircraft.length}</p>
-        </div>
+      <Panel style={{ marginTop: 14 }}>
+        <PanelHead title="Alert delivery" right={<Count>Recent</Count>} />
+        {channels.length === 0 ? (
+          <Empty
+            icon={<Bell size={22} />}
+            title="No alerts sent yet"
+            hint="Delivery health appears here once the tracker fires its first alert."
+          />
+        ) : (
+          <TableWrap>
+            <Table>
+              <thead>
+                <tr>
+                  <Th>Channel</Th><Th>Last delivered</Th><Th>Sent</Th><Th>Health</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {channels.map(([key, c]) => (
+                  <tr key={key}>
+                    <Td strong>{CHANNEL_LABEL[key] || key}</Td>
+                    <Td mono>{ago(c.last)}</Td>
+                    <Td mono>{c.sent - c.failed} / {c.sent}</Td>
+                    <Td>
+                      {c.failed === 0
+                        ? <Pill t="good">Healthy</Pill>
+                        : <Pill t="warn">{c.failed} failed</Pill>}
+                    </Td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrap>
+        )}
+      </Panel>
 
-        <div style={s.cardAccent('var(--good)')}>
-          <div style={s.cardTop}>
-            <div style={s.iconBox('var(--good)')}><Zap size={20} color="var(--good)" /></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={s.statusDot('var(--good)')} />
-              <span style={{ fontSize: '12px', color: 'var(--good)', fontWeight: '600' }}>Online</span>
-            </div>
-          </div>
-          <p style={s.cardLabel}>Backend Status</p>
-          <p style={{ ...s.cardValue, color: 'var(--good)' }}>Active</p>
-        </div>
-      </div>
-
-      <div style={s.grid2}>
-        <div style={s.card}>
-          <p style={s.sectionTitle}><Bell size={15} color="var(--muted)" />Alert Activity</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-            {[
-              { label: 'Today', value: stats?.today ?? '—' },
-              { label: 'This Week', value: stats?.this_week ?? '—' },
-              { label: 'All Time', value: stats?.total ?? '—' },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ background: 'var(--panel)', borderRadius: '10px', padding: '14px', textAlign: 'center', border: '1px solid var(--border)' }}>
-                <p style={{ fontSize: '22px', fontWeight: '700', color: 'var(--text)', margin: '0 0 2px 0' }}>{value}</p>
-                <p style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={s.card}>
-          <p style={s.sectionTitle}><User size={15} color="var(--muted)" />Account Details</p>
-          <div style={s.row}>
-            <span style={s.rowLabel}>Email</span>
-            <span style={{ ...s.rowValue, color: 'var(--accent)', fontSize: '12px' }}>{user?.email || '—'}</span>
-          </div>
-          <div style={s.row}>
-            <span style={s.rowLabel}><Calendar size={13} />Member Since</span>
-            <span style={s.rowValue}>{joinDate}</span>
-          </div>
-          <div style={s.row}>
-            <span style={s.rowLabel}>License</span>
-            <span style={{ ...s.rowValue, color }}>{currentTier.charAt(0).toUpperCase() + currentTier.slice(1)}</span>
-          </div>
-          <div style={s.rowLast}>
-            <span style={s.rowLabel}><Clock size={13} />Expires</span>
-            <span style={{ ...s.rowValue, fontSize: '12px', color: expiryWarning?.urgent ? 'var(--bad)' : 'var(--text)' }}>
-              {expiresAt ? expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-            </span>
-          </div>
-          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-            <button
-              onClick={handleBillingPortal}
-              style={{
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                padding: '10px', borderRadius: '10px', border: '1px solid var(--accent)30',
-                background: 'var(--accent-soft)', color: 'var(--accent)', fontSize: '13px', fontWeight: '600',
-                cursor: 'pointer', transition: 'background 0.2s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-soft)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'var(--accent-soft)')}
-            >
-              <CreditCard size={14} />
-              Manage Subscription
-              <ExternalLink size={12} color="var(--faint)" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div style={s.grid2}>
-        <div style={s.card}>
-          <p style={s.sectionTitle}><Bell size={15} color="var(--muted)" />Recent Alerts</p>
-          {notifications.length === 0 ? (
-            <div style={s.emptyLog}>
-              <Bell size={24} color="var(--border)" style={{ marginBottom: '8px', display: 'block', margin: '0 auto 8px' }} />
-              <p style={{ margin: 0 }}>No alerts sent yet</p>
-              <p style={{ margin: '4px 0 0', fontSize: '12px' }}>Alerts will appear here once the tracker runs</p>
-            </div>
-          ) : (
-            notifications.map((n, i) => (
-              <div key={n.id} style={i < notifications.length - 1 ? s.alertRow : s.alertRowLast}>
-                <div style={s.alertIcon(n.alert_type)}>
-                  <Plane size={14} color={n.alert_type === 'landing' ? 'var(--good)' : 'var(--accent)'} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={s.alertTail}>{n.aircraft_tail}</div>
-                  <div style={s.alertType}>
-                    {alertTypeLabel(n.alert_type)} · {integrationIcon(n.integration_type)} {n.integration_type}
-                  </div>
-                </div>
-                <div style={s.alertTime}>{timeAgo(n.sent_at)}</div>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div style={s.card}>
-          <p style={s.sectionTitle}><Plane size={15} color="var(--muted)" />Tracked Aircraft</p>
-          {aircraft.length === 0 ? (
-            <p style={{ color: 'var(--muted)', fontSize: '13px', marginTop: '8px' }}>
-              No aircraft added yet. Go to the Team tab to add one.
-            </p>
-          ) : (
-            aircraft.map((a, i) => {
-              const live = liveAircraft.find(l => l.icao24 === a.icao24 || l.tail_number === a.tail_number);
-              const lastSeenMs = live?.last_seen ? Date.now() - new Date(live.last_seen).getTime() : Infinity;
-              const isStale = lastSeenMs > 45000;
-              const hasPosition = live && !isStale && (live.latitude || live.distance_nm > 0);
-              const isOnGround = live && !isStale && live.on_ground;
-              const isAirborne = hasPosition && !isOnGround;
-              const dotColor = isAirborne ? 'var(--good)' : isOnGround ? 'var(--bad)' : 'var(--muted)';
-              const statusLabel = isAirborne ? 'Airborne' : isOnGround ? 'On Ground' : 'Not Detected';
-              return (
-                <div key={a.id} style={i < aircraft.length - 1 ? s.row : s.rowLast}>
-                  <span style={s.rowLabel}>
-                    <div style={{ ...s.statusDot(dotColor), animation: isAirborne ? 'acPulse 2s ease-in-out infinite' : 'none' }} />
-                    <div>
-                      <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: '600' }}>{a.tail_number}</div>
-                      {a.friendly_name && <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{a.friendly_name}</div>}
-                    </div>
-                  </span>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'monospace' }}>{a.icao24 || 'No ICAO'}</div>
-                    <div style={{ fontSize: '11px', color: dotColor, marginTop: '2px', fontWeight: '600' }}>{statusLabel}</div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes acPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-      `}</style>
-    </div>
+      {/* Teams-only: an alert nobody is rostered to see is an alert that did
+          not happen, so who is covering belongs on the front page. */}
+      <Panel style={{ marginTop: 14 }}>
+        <PanelHead
+          title="On duty now"
+          right={<Count>{members.length ? `${onDuty.length} of ${members.length}` : 'No team'}</Count>}
+        />
+        {onDuty.length === 0 ? (
+          <Empty
+            icon={<UserCheck size={22} />}
+            title={members.length ? 'Nobody is on duty' : 'No team yet'}
+            hint={members.length
+              ? 'Alerts still send, but no one is rostered to act on them. Set duty on the Team tab.'
+              : 'Create or join a team to roster coverage.'}
+          />
+        ) : (
+          <TableWrap>
+            <Table>
+              <thead>
+                <tr><Th>Member</Th><Th>Role</Th><Th>Status</Th></tr>
+              </thead>
+              <tbody>
+                {onDuty.map(m => (
+                  <tr key={m.member_id}>
+                    <Td strong>{m.email || '—'}</Td>
+                    <Td dim>{ROLE_LABEL[m.role] || m.role}</Td>
+                    <Td><Pill t="good">On duty</Pill></Td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </TableWrap>
+        )}
+      </Panel>
+    </>
   );
 }
